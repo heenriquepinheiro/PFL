@@ -74,10 +74,17 @@ read_number_aux(X,Acc):-
 read_number_aux(X,X).
 
 
+choose_board(Size):-
+    write('Board size: 8? '),
+    repeat,
+    read_number(Size),
+    member(Size, [8]), !.
+
+
 choose_player(Player):-
     name_of(player1, Name1),
     name_of(player2, Name2),
-    format('Who starts playing?\n1 - ~a with White\n2 - ~a with Black\n', [Name1, Name2]),
+    format('Who starts playing?\n1 - ~a with White\n2 - ~a with White\n', [Name1, Name2]),
     get_option(1, 2, 'Select', Index),
     nth1(Index, [player1, player2], Player).
 
@@ -93,7 +100,93 @@ set_mode :-
 settings([Board, Player, [], 0]):-
     apart,
     set_mode,
-    choose_player(Player).
+    choose_player(Player),
+    choose_board(Size),
+    board(Size, Board).
 
 
-play:- settings(GameState).
+play:- settings(GameState), game_cycle(GameState).
+
+board(8,[
+        [empty,     black,      black,     black,     black,     black,     black,     empty],
+        [empty,     black,      black,     black,     black,     black,     black,     empty],
+        [empty,     empty,      empty,     empty,     empty,     empty,     empty,     empty],
+        [empty,     empty,      empty,     empty,     empty,     empty,     empty,     empty],
+        [empty,     empty,      empty,     empty,     empty,     empty,     empty,     empty],
+        [empty,     empty,      empty,     empty,     empty,     empty,     empty,     empty],
+        [empty,     white,      white,     white,     white,     white,     white,     empty],
+        [empty,     white,      white,     white,     white,     white,     white,     empty]
+        
+]).
+
+symbol(empty, ' '):-!.
+symbol(black, 'B'):-!.
+symbol(white, 'W'):-!.
+
+position(Board, Col-Row, Piece):-
+    nth1(Row, Board, Line),
+    nth1(Col, Line, Piece).
+
+    
+
+game_cycle(GameState):-
+    display_game(GameState).
+
+get_symbol(Board, Row, Col, Symbol):-
+    position(Board, Col-Row, Piece),
+    symbol(Piece, Symbol).
+
+
+display_game([Board,_,_,_]) :-
+    clear_console,
+    length(Board, Size),
+    display_header(1, Size),
+    display_bar(Size),
+    display_rows(Board, 1, Size).
+
+
+display_header(Final, Final):-
+    format('~d\n ', [Final]), !.
+display_header(1, Final):-
+    format('\n   ~d   ', [1]),
+    Next is 2,
+    display_header(Next, Final).
+display_header(Num, Final):-
+    format('~d   ', [Num]),
+    Next is Num + 1,
+    display_header(Next, Final).
+
+
+display_bar(0):-
+    write('|\n'), !.
+display_bar(Size):-
+    write('|---'),
+    Next is Size - 1,
+    display_bar(Next).
+
+
+display_rows(_, LineNum, Size):-
+    LineNum > Size, nl, !.
+display_rows(Board, LineNum, Size):-
+    format('~d|', [LineNum]),
+    display_pieces(Size),
+    write(' '),
+    display_bar(Size),
+    Next is LineNum + 1,
+    display_rows(Board, Next, Size).
+
+
+display_pieces(_, _, Col, Size):- 
+    Col > Size, nl, !.
+display_pieces(Board, Row, Col, Size):-
+    get_symbol(Board, Row, Col, Symbol),
+    format(' ~a |', [Symbol]),
+    Next is Col - 1,
+    display_pieces(Board, Row, Next, Size).
+
+clear_console:- write('\33\[2J').
+
+
+
+
+
