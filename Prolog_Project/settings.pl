@@ -105,8 +105,6 @@ settings([Board, Player, [], 0]):-
     board(Size, Board).
 
 
-play:- settings(GameState), game_cycle(GameState).
-
 board(8,[
         [empty,     black,      black,     black,     black,     black,     black,     empty],
         [empty,     black,      black,     black,     black,     black,     black,     empty],
@@ -128,25 +126,13 @@ position(Board, Col-Row, Piece):-
     nth1(Col, Line, Piece).
 
     
-
-game_cycle(GameState):-
-    display_game(GameState).
-
 get_symbol(Board, Row, Col, Symbol):-
     position(Board, Col-Row, Piece),
     symbol(Piece, Symbol).
 
 
-display_game([Board,_,_,_]) :-
-    clear_console,
-    length(Board, Size),
-    display_header(1, Size),
-    display_bar(Size),
-    display_rows(Board, 1, Size).
-
-
 display_header(Final, Final):-
-    format('~d\n ', [Final]), !.
+    format('~d\n  ', [Final]), !.
 display_header(1, Final):-
     format('\n   ~d   ', [1]),
     Next is 2,
@@ -165,24 +151,24 @@ display_bar(Size):-
     display_bar(Next).
 
 
-display_rows(_, LineNum, Size):-
-    LineNum > Size, nl, !.
-display_rows(Board, LineNum, Size):-
-    format('~d|', [LineNum]),
-    display_pieces(Size),
-    write(' '),
-    display_bar(Size),
-    Next is LineNum + 1,
-    display_rows(Board, Next, Size).
-
-
 display_pieces(_, _, Col, Size):- 
-    Col > Size, nl, !.
-display_pieces(Board, Row, Col, Size):-
-    get_symbol(Board, Row, Col, Symbol),
+    Col > Size, write('\n  '), !.
+display_pieces(Board, Line, Col, Size):-
+    get_symbol(Board, Line, Col, Symbol),
     format(' ~a |', [Symbol]),
-    Next is Col - 1,
-    display_pieces(Board, Row, Next, Size).
+    NextCol is Col + 1,
+    display_pieces(Board, Line, NextCol, Size).
+
+
+display_rows(_, Line, Size):- 
+    Line > Size, nl, !.
+
+display_rows(Board, Line, Size):-
+    format('~d |', [Line]),
+    display_pieces(Board, Line, 1, Size),
+    display_bar(Size),
+    NextLine is Line + 1,
+    display_rows(Board, NextLine, Size).
 
 clear_console:- write('\33\[2J').
 
