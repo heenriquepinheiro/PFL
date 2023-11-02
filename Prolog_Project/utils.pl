@@ -7,6 +7,15 @@ get_choice(Min, Max, Context, Choice):-
     read_number(Choice),
     between(Min, Max, Choice), !.
 
+read_number(X):-
+    read_number_aux(X,0).
+read_number_aux(X,Acc):- 
+    get_code(C),
+    between(48, 57, C), !,
+    Acc1 is 10*Acc + (C - 48),
+    read_number_aux(X,Acc1).
+read_number_aux(X,X).
+
 get_move(Board, CI-RI, CF-RF):-
     length(Board, Size),
     get_choice(1, Size, 'Column of the piece to move', CI),
@@ -19,3 +28,4 @@ in_bounds(Board, Col-Row):-
     length(Board, Size),
     between(1, Size, Col),
     between(1, Size, Row).
+

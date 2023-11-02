@@ -1,6 +1,7 @@
 :- use_module(library(lists)).
 :- use_module(library(between)).
 :- use_module(library(system), [now/1]).
+:- consult(utils).
 
 % game header
 apart:-
@@ -53,25 +54,8 @@ set_difficulty(Machine):-
     format('Choose difficulty of ~a:\n', [Machine]),
     write('1. Normal\n'),
     write('2. Hard\n'),
-    get_option(1, 2, 'Difficulty', Difficulty),!,
+    get_choice(1, 2, 'Difficulty', Difficulty),!,
     asserta((difficulty_of(Machine, Difficulty))).
-
-
-get_option(Low, High, Message, Option):-
-    format('~a between ~d and ~d: ', [Message, Low, High]),
-    repeat,
-    read_number(Option),
-    between(Low, High, Option), !.
-
-
-read_number(X):-
-    read_number_aux(X,0).
-read_number_aux(X,Acc):- 
-    get_code(C),
-    between(48, 57, C), !,
-    Acc1 is 10*Acc + (C - 48),
-    read_number_aux(X,Acc1).
-read_number_aux(X,X).
 
 
 choose_board(Size):-
@@ -85,14 +69,14 @@ choose_player(Player):-
     name_of(player1, Name1),
     name_of(player2, Name2),
     format('Who starts playing?\n1 - ~a with White\n2 - ~a with White\n', [Name1, Name2]),
-    get_option(1, 2, 'Select', Index),
+    get_choice(1, 2, 'Select', Index),
     nth1(Index, [player1, player2], Player).
 
 
 % Game mode choice
 set_mode :-
     initial_menu,
-    get_option(1, 3, 'Mode', Option), !,
+    get_choice(1, 3, 'Mode', Option), !,
     option(Option).
 
 
