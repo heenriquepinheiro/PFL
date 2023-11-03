@@ -11,9 +11,9 @@ game_cycle(GameState):-
     choose_move(GameState, Move),
     new_move(GameState, Move, NewGameState), !,
     /*
-    jump_mode(NewGameState, Move), !,*/
+    jump_mode(NewGameState, Move), !,
     change_players(GameState, NewGameState),
-    write('passou\n'),
+    write('passou\n'), */
     game_cycle(NewGameState).
 
 jump_mode(GameState, Move):-
@@ -45,29 +45,58 @@ play:- settings(GameState), !, game_cycle(GameState).
 
 choose_move([Board, Player, AlreadyJumped], CI-RI-CF-RF):-
     get_move(Board, CI-RI, CF-RF),
-    validate_move(Board, Player, AlreadyJumped, CI-RI-CF-RF), !.
+    validate_move_normal(Board, Player, AlreadyJumped, CI-RI-CF-RF), !.
 
 % Direction: 1 - Horizontal; 2 - Vertical; 3 - Diagonal (\); 4 - Diagonal (//).
 
-validate_move(Board, Player, AlreadyJumped, CI-RI-CF-RF):-
+
+validate_move_normal(Board, Player, AlreadyJumped, CI-RI-CF-RF):-
     position(Board, CI-RI, Piece),
     player_color(Player, Piece), 
-    isJumped(CF-RF, AlreadyJumped), !,
     CF>=1, RF>=1, CF=<8, RF=<8,
     obstructed(Board, CI-RI-CF-RF),
-    /*
-    get_line_length(RI,CI,Len),
-    */
     get_direction(CI-RI-CF-RF, Direction, JumpSize),
-    check_jump_size(CI-RI, Board, Player, Direction, RealJumpSize), !,
-    
-    write('final check\n'),
+    check_jump_size_normal(CI-RI, Board, Player, Direction, RealJumpSize), !,
 
-    format('Wanted: ~d | Real : ~d \n', [JumpSize, RealJumpSize]),
+    JumpSize =:= RealJumpSize.
 
-    JumpSize =:= RealJumpSize,
-    write('move validated\n').
+check_jump_size_normal(CI-RI, Board, Player, Direction, RealJumpSize):-
+    Direction == 1,
+    ColBack is CI - 1, ColFront is CI + 1,
+    player_color(Player, PlayerColor),
+    ((position(Board, ColBack-RI, PlayerColor), position(Board, ColFront-RI, PlayerColor), RealJumpSize is 3);
+    (\+position(Board, ColBack-RI, PlayerColor), position(Board, ColFront-RI, PlayerColor), RealJumpSize is 2);
+    (position(Board, ColBack-RI, PlayerColor), \+position(Board, ColFront-RI, PlayerColor), RealJumpSize is 2);
+    (\+position(Board, ColBack-RI, PlayerColor), \+position(Board, ColFront-RI, PlayerColor), RealJumpSize is 1)).
 
+check_jump_size_normal(CI-RI, Board, Player, Direction, RealJumpSize):-
+    Direction == 2,
+    RowBack is RI - 1, RowFront is RI + 1,
+    player_color(Player, PlayerColor),
+    ((position(Board, CI-RowBack, PlayerColor), position(Board, CI-RowFront, PlayerColor), RealJumpSize is 3);
+    (\+position(Board, CI-RowBack, PlayerColor), position(Board, CI-RowFront, PlayerColor), RealJumpSize is 2);
+    (position(Board, CI-RowBack, PlayerColor), \+position(Board, CI-RowFront, PlayerColor), RealJumpSize is 2);
+    (\+position(Board, CI-RowBack, PlayerColor), \+position(Board, CI-RowFront, PlayerColor), RealJumpSize is 1)).
+
+check_jump_size_normal(CI-RI, Board, Player, Direction, RealJumpSize):-
+    Direction == 3,
+    ColBack is CI - 1, ColFront is CI + 1,
+    RowBack is RI - 1, RowFront is RI + 1,
+    player_color(Player, PlayerColor),
+    ((position(Board, ColBack-RowBack, PlayerColor), position(Board, ColFront-RowFront, PlayerColor), RealJumpSize is 3);
+    (\+position(Board, ColBack-RowBack, PlayerColor), position(Board, ColFront-RowFront, PlayerColor), RealJumpSize is 2);
+    (position(Board, ColBack-RowBack, PlayerColor), \+position(Board, ColFront-RowFront, PlayerColor), RealJumpSize is 2);
+    (\+position(Board, ColBack-RowBack, PlayerColor), \+position(Board, ColFront-RowFront, PlayerColor), RealJumpSize is 1)).
+
+check_jump_size_normal(CI-RI, Board, Player, Direction, RealJumpSize):-
+    Direction == 4,
+    ColBack is CI - 1, ColFront is CI + 1,
+    RowBack is RI - 1, RowFront is RI + 1,
+    player_color(Player, PlayerColor),
+    ((position(Board, ColBack-RowFront, PlayerColor), position(Board, ColFront-RowBack, PlayerColor), RealJumpSize is 3);
+    (\+position(Board, ColBack-RowFront, PlayerColor), position(Board, ColFront-RowBack, PlayerColor), RealJumpSize is 2);
+    (position(Board, ColBack-RowFront, PlayerColor), \+position(Board, ColFront-RowBack, PlayerColor), RealJumpSize is 2);
+    (\+position(Board, ColBack-RowFront, PlayerColor), \+position(Board, ColFront-RowBack, PlayerColor), RealJumpSize is 1)).
 
 get_direction(CI-RI-CF-RF, Direction, JumpSize):-
     (RI == RF, Direction is 1, Diff is CF - CI, abs(Diff, A), JumpSize is A);
@@ -75,7 +104,19 @@ get_direction(CI-RI-CF-RF, Direction, JumpSize):-
     ((CF - CI) =:= (RF - RI), Diff is CF - CI, Direction is 3, abs(Diff, C), JumpSize is C);
     ((CF - CI) =:= -(RF - RI), Diff is CF - CI, Direction is 4, abs(Diff, D), JumpSize is D).
 
-check_jump_size(CI-RI, Board, Player, Direction, RealJumpSize):-
+% ------------------------Possible Hard Mode------------------------------
+/*
+validate_move_hard(Board, Player, AlreadyJumped, CI-RI-CF-RF):-
+    position(Board, CI-RI, Piece),
+    player_color(Player, Piece), 
+    CF>=1, RF>=1, CF=<8, RF=<8,
+    obstructed(Board, CI-RI-CF-RF),
+    get_direction(CI-RI-CF-RF, Direction, JumpSize),
+    check_jump_size_hard(CI-RI, Board, Player, Direction, RealJumpSize), !,
+
+    JumpSize =:= RealJumpSize.
+
+check_jump_size_hard(CI-RI, Board, Player, Direction, RealJumpSize):-
     (Direction == 1, Acc is 1- CI,  check_jump_size_aux(CI-RI, Board, Player, Direction, 0, RealJumpSize, Acc));
     (Direction == 2, Acc is 1- RI,  check_jump_size_aux(CI-RI, Board, Player, Direction, 0, RealJumpSize, Acc));
     (Direction == 3, check_jump_size_aux(CI-RI, Board, Player, Direction, 0, RealJumpSize, -7));
@@ -131,7 +172,8 @@ check_jump_size_aux(CI-RI, Board, Player, Direction, CurrJS, RealJumpSize, Acc):
     (player_color(Player,NewPiece), NewRealJumpSize is CurrJS + 1; \+player_color(Player,NewPiece), NewRealJumpSize is CurrJS),
     NewAcc is Acc+1,
     check_jump_size_aux(CI-RI, Board, Player, Direction, NewRealJumpSize, RealJumpSize, NewAcc))).
-
+*/
+% ---------------------------------------------------------------------------
 
 obstructed(Board, CI-RI-CF-RF):-
     position(Board, CI-RI, CurrPiece),
@@ -154,7 +196,7 @@ new_move(GameState, Move, NewGameState):-
     position(Board, CI-RI, Piece),
     put_piece(Board, CI-RI, empty, CleanedBoard),
     put_piece(CleanedBoard, CF-RF, Piece, NewBoard),
-    append([CF-RF],AlreadyJumped, NewAlreadyJumped)
+    append([CF-RF],AlreadyJumped, NewAlreadyJumped),
     NewGameState = [NewBoard, Player, NewAlreadyJumped].
 
 
