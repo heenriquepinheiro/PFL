@@ -52,7 +52,6 @@ choose_move([Board, Player, _], CI-RI-CF-RF):-
 validate_move(Board, Player, CI-RI-CF-RF):-
     position(Board, CI-RI, Piece),
     player_color(Player, Piece), !,
-    % [Size, BoardDisplay] = Board,
     CF>=1, RF>=1, CF=<8, RF=<8,
     obstructed(Board, CI-RI-CF-RF),
     /*
@@ -62,6 +61,8 @@ validate_move(Board, Player, CI-RI-CF-RF):-
     check_jump_size(CI-RI, Board, Player, Direction, RealJumpSize), !,
     
     write('final check\n'),
+
+    format('Wanted: ~d | Real : ~d \n', [JumpSize, RealJumpSize]),
 
     JumpSize =:= RealJumpSize,
     write('move validated\n').
@@ -76,20 +77,21 @@ get_direction(CI-RI-CF-RF, Direction, JumpSize):-
 check_jump_size(CI-RI, Board, Player, Direction, RealJumpSize):-
     (Direction == 1, Acc is 1- CI,  check_jump_size_aux(CI-RI, Board, Player, Direction, 0, RealJumpSize, Acc));
     (Direction == 2, Acc is 1- RI,  check_jump_size_aux(CI-RI, Board, Player, Direction, 0, RealJumpSize, Acc));
-    (Direction == 3, ((CI < RI, Acc is 1 - CI, check_jump_size_aux(CI-RI, Board, Player, Direction, 0, RealJumpSize, Acc));
-    (RI =< CI, Acc is 1 - RI, check_jump_size_aux(CI-RI, Board, Player, Direction, 0, RealJumpSize, Acc))));
-    (Direction == 4, check_jump_size_aux(CI-RI, Board, Player, Direction, 0, RealJumpSize, Acc)).
+    (Direction == 3, check_jump_size_aux(CI-RI, Board, Player, Direction, 0, RealJumpSize, -7));
+    (Direction == 4, check_jump_size_aux(CI-RI, Board, Player, Direction, 0, RealJumpSize, -7)).
 
 check_jump_size_aux(CI-RI, Board, Player, Direction, CurrJS, RealJumpSize, Acc):-
     length(Board, Size),
-    ((Direction \= 4, Diff1 is Acc + CI, Diff2 is Acc + RI, (Diff1 > Size; Diff2 > Size));
-    (Direction =:= 4, Diff1 is Acc + CI, Diff2 is Acc + RI, (Diff1 > Size; Diff2 < 1))), !,
+    ((Direction =:= 1, Col is CI + Acc, Col > Size);
+    (Direction =:= 2, Row is RI + Acc, Row > Size);
+    (Direction =:= 3, Col is CI + Acc, Row is RI + Acc, (Col > Size; Row > Size));
+    (Direction =:= 4, Col is CI + Acc, Row is RI - Acc, (Col > Size; Row < 1))), !,
     RealJumpSize is CurrJS.
 
 
 check_jump_size_aux(CI-RI, Board, Player, Direction, CurrJS, RealJumpSize, Acc):-
     length(Board, Size),
-    Direction == 1, NewCol is Acc + CI, Diff =< Size,
+    Direction == 1, NewCol is Acc + CI, NewCol =< Size,
     player_color(Player, PlayerPiece),
     position(Board, NewCol-RI, NewPiece),
     (player_color(Player,NewPiece), NewRealJumpSize is CurrJS + 1; \+player_color(Player,NewPiece), NewRealJumpSize is CurrJS),
@@ -110,22 +112,23 @@ check_jump_size_aux(CI-RI, Board, Player, Direction, CurrJS, RealJumpSize, Acc):
     Direction == 3,
     NewCol is CI + Acc, NewCol =< Size,
     NewRow is RI + Acc, NewRow =< Size,
+    (((NewCol<1;NewRow<1), NewAcc is Acc + 1, check_jump_size_aux(CI-RI, Board, Player, Direction, CurrJS, RealJumpSize, NewAcc));(NewCol>=1, NewRow>=1,
     player_color(Player, PlayerPiece),
     position(Board, NewCol-NewRow, NewPiece),
     (player_color(Player,NewPiece), NewRealJumpSize is CurrJS + 1; \+player_color(Player,NewPiece), NewRealJumpSize is CurrJS),
     NewAcc is Acc+1,
-    check_jump_size_aux(CI-RI, Board, Player, Direction, NewRealJumpSize, RealJumpSize, NewAcc).
+    check_jump_size_aux(CI-RI, Board, Player, Direction, NewRealJumpSize, RealJumpSize, NewAcc))).
 
 check_jump_size_aux(CI-RI, Board, Player, Direction, CurrJS, RealJumpSize, Acc):-
     length(Board,Size),
-    Direction == 4, (Acc + CI) < Size, (Acc + RI) =< Size,
-    NewCol is CI + Acc,
-    NewRow is RI - Acc,
+    NewCol is CI + Acc, NewCol =< Size,
+    NewRow is RI - Acc, NewRow >= 1,
+    (((NewCol<1;NewRow>Size), NewAcc is Acc + 1, NewRealJumpSize is CurrJS, check_jump_size_aux(CI-RI, Board, Player, Direction, NewRealJumpSize, RealJumpSize, NewAcc));(NewCol>=1, NewRow=<Size,
     player_color(Player, PlayerPiece),
     position(Board, NewCol-NewRow, NewPiece),
     (player_color(Player,NewPiece), NewRealJumpSize is CurrJS + 1; \+player_color(Player,NewPiece), NewRealJumpSize is CurrJS),
     NewAcc is Acc+1,
-    check_jump_size_aux(CI-RI, Board, Player, Direction, NewRealJumpSize, RealJumpSize, NewAcc).
+    check_jump_size_aux(CI-RI, Board, Player, Direction, NewRealJumpSize, RealJumpSize, NewAcc))).
 
 
 obstructed(Board, CI-RI-CF-RF):-
