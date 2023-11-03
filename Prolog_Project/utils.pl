@@ -29,3 +29,15 @@ in_bounds(Board, Col-Row):-
     between(1, Size, Col),
     between(1, Size, Row).
 
+abs(X,X) :- X >= 0, !.
+abs(X,Y) :- Y is -X.
+
+player_change(player1, player2).
+player_change(player2, player1).
+
+put_piece(Board, C-R, Piece, NewBoard):-
+    Ridx is R-1,
+    Cidx is C -1,
+    nth0(Ridx, Board, Line),
+    replace(Cidx, Piece, Line, NewLine),
+    replace(Ridx, NewLine, Board, NewBoard).

@@ -3,6 +3,8 @@
 :- use_module(library(system), [now/1]).
 :- consult(utils).
 
+:- dynamic player_color/2.
+
 % game header
 apart:-
     write('=================\n'),
@@ -70,7 +72,14 @@ choose_player(Player):-
     name_of(player2, Name2),
     format('Who starts playing?\n1 - ~a with White\n2 - ~a with White\n', [Name1, Name2]),
     get_choice(1, 2, 'Select', Index),
-    nth1(Index, [player1, player2], Player).
+    nth1(Index, [player1, player2], Player),
+    assert_colors(Index).
+
+assert_colors(Index):-
+    Index =:= 1, asserta(player_color(player1,white)), asserta(player_color(player2,black)).
+
+assert_colors(Index):-
+    Index =:= 2, asserta(player_color(player2,white)), asserta(player_color(player1,black)).
 
 
 % Game mode choice
@@ -81,7 +90,7 @@ set_mode :-
 
 
 % initialize GameState with board
-settings([Board, Player, [], 0]):-
+settings([Board, Player, []]):-
     apart,
     set_mode,
     choose_player(Player),
