@@ -82,7 +82,8 @@ check_jump_size(CI-RI, Board, Player, Direction, RealJumpSize):-
 
 check_jump_size_aux(CI-RI, Board, Player, Direction, CurrJS, RealJumpSize, Acc):-
     length(Board, Size),
-    Diff1 is Acc + CI, Diff2 is Acc + RI, (Diff1 > Size; Diff2 > Size), !,
+    ((Direction \= 4, Diff1 is Acc + CI, Diff2 is Acc + RI, (Diff1 > Size; Diff2 > Size));
+    (Direction =:= 4, Diff1 is Acc + CI, Diff2 is Acc + RI, (Diff1 > Size; Diff2 < 1))), !,
     RealJumpSize is CurrJS.
 
 
