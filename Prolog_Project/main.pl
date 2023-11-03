@@ -7,8 +7,8 @@
 
 game_cycle(GameState):-
     display_game(GameState),
-    user_turn(GameState), !,
-    choose_move(GameState, Move),
+    user_turn(GameState),
+    choose_move(GameState, Move), !,
     new_move(GameState, Move, NewGameState), !,
     /*
     jump_mode(NewGameState, Move), !,
@@ -44,8 +44,13 @@ play:- settings(GameState), !, game_cycle(GameState).
 
 
 choose_move([Board, Player, AlreadyJumped], CI-RI-CF-RF):-
-    get_move(Board, CI-RI, CF-RF),
-    validate_move_normal(Board, Player, AlreadyJumped, CI-RI-CF-RF), !.
+    get_move(Board, ColI-RowI, ColF-RowF),
+    ((validate_move_normal(Board, Player, AlreadyJumped, ColI-RowI-ColF-RowF), CI is ColI, RI is RowI, CF is ColF, RF is RowF);
+    (\+validate_move_normal(Board, Player, AlreadyJumped, ColI-RowI-ColF-RowF),
+    write('The selected move is not valid, please try again!\n'),
+    choose_move([Board, Player, AlreadyJumped], CI-RI-CF-RF))).
+
+
 
 % Direction: 1 - Horizontal; 2 - Vertical; 3 - Diagonal (\); 4 - Diagonal (//).
 
