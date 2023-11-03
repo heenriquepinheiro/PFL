@@ -41,3 +41,8 @@ put_piece(Board, C-R, Piece, NewBoard):-
     nth0(Ridx, Board, Line),
     replace(Cidx, Piece, Line, NewLine),
     replace(Ridx, NewLine, Board, NewBoard).
+
+
+replace(Idx, Piece, Target, NewTarget):-
+    nth0(Idx, Target, _, MidTarget),
+    nth0(Idx, NewTarget, Piece, MidTarget).
