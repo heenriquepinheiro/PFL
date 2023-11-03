@@ -12,8 +12,8 @@ game_cycle(GameState):-
     new_move(GameState, Move, NewGameState), !,
     /*
     jump_mode(NewGameState, Move), !,*/
-    write('ta2\n'),
     change_players(GameState, NewGameState),
+    write('passou\n'),
     game_cycle(NewGameState).
 
 jump_mode(GameState, Move):-
@@ -43,15 +43,16 @@ display_game([Board,_,_]) :-
 play:- settings(GameState), !, game_cycle(GameState).
 
 
-choose_move([Board, Player, _], CI-RI-CF-RF):-
+choose_move([Board, Player, AlreadyJumped], CI-RI-CF-RF):-
     get_move(Board, CI-RI, CF-RF),
-    validate_move(Board, Player, CI-RI-CF-RF), !.
+    validate_move(Board, Player, AlreadyJumped, CI-RI-CF-RF), !.
 
 % Direction: 1 - Horizontal; 2 - Vertical; 3 - Diagonal (\); 4 - Diagonal (//).
 
-validate_move(Board, Player, CI-RI-CF-RF):-
+validate_move(Board, Player, AlreadyJumped, CI-RI-CF-RF):-
     position(Board, CI-RI, Piece),
-    player_color(Player, Piece), !,
+    player_color(Player, Piece), 
+    isJumped(CF-RF, AlreadyJumped), !,
     CF>=1, RF>=1, CF=<8, RF=<8,
     obstructed(Board, CI-RI-CF-RF),
     /*
@@ -138,13 +139,13 @@ obstructed(Board, CI-RI-CF-RF):-
     (NextPlace \= CurrPiece).
 
     
-change_players([A,Player,_],NewGameState):-
-    write('ta1\n'),
+change_players(GameState,NewGameState):-
+    [Board,Player,_] = GameState,
     player_change(Player, NewPlayer),
     format('Res ~a\n', [NewPlayer]),
-    NewGameState = [A,NewPlayer, []].
-
-
+    AlreadyJumped = [],
+    NewGameState = [Board, NewPlayer, AlreadyJumped],
+    format('Res2 ~a\n', [NewPlayer]).
 
 
 new_move(GameState, Move, NewGameState):-
@@ -153,9 +154,12 @@ new_move(GameState, Move, NewGameState):-
     position(Board, CI-RI, Piece),
     put_piece(Board, CI-RI, empty, CleanedBoard),
     put_piece(CleanedBoard, CF-RF, Piece, NewBoard),
-    % append(CF-RF,NewAlreadyJumped)
-    NewGameState = [NewBoard, Player, AlreadyJumped].
+    append([CF-RF],AlreadyJumped, NewAlreadyJumped)
+    NewGameState = [NewBoard, Player, NewAlreadyJumped].
 
+
+isJumped(C-R, List) :-
+    member(C-R, List).
 
 
 isValid(X, Y):- X >= 1 , X =< 8, Y >= 1 , Y =< 8.
