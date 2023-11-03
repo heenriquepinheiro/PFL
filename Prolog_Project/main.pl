@@ -9,7 +9,6 @@ game_cycle(GameState):-
     display_game(GameState),
     user_turn(GameState), !,
     choose_move(GameState, Move),
-    write('ta\n'),
     new_move(GameState, Move, NewGameState), !,
     /*
     jump_mode(NewGameState, Move), !,
@@ -121,6 +120,7 @@ check_jump_size_aux(CI-RI, Board, Player, Direction, CurrJS, RealJumpSize, Acc):
 
 check_jump_size_aux(CI-RI, Board, Player, Direction, CurrJS, RealJumpSize, Acc):-
     length(Board,Size),
+    Direction == 4,
     NewCol is CI + Acc, NewCol =< Size,
     NewRow is RI - Acc, NewRow >= 1,
     (((NewCol<1;NewRow>Size), NewAcc is Acc + 1, NewRealJumpSize is CurrJS, check_jump_size_aux(CI-RI, Board, Player, Direction, NewRealJumpSize, RealJumpSize, NewAcc));(NewCol>=1, NewRow=<Size,
