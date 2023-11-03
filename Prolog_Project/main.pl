@@ -12,8 +12,9 @@ game_cycle(GameState):-
     write('ta\n'),
     new_move(GameState, Move, NewGameState), !,
     /*
-    jump_mode(NewGameState, Move), !,
-    change_players(GameState, NewGameState),*/
+    jump_mode(NewGameState, Move), !,*/
+    write('ta2\n'),
+    change_players(GameState, NewGameState),
     game_cycle(NewGameState).
 
 jump_mode(GameState, Move):-
@@ -137,8 +138,11 @@ obstructed(Board, CI-RI-CF-RF):-
     (NextPlace \= CurrPiece).
 
     
-change_players([_,Player,_],[_,NewPlayer, []]):-
-    player_change(Player, NewPlayer).
+change_players([A,Player,_],NewGameState):-
+    write('ta1\n'),
+    player_change(Player, NewPlayer),
+    format('Res ~a\n', [NewPlayer]),
+    NewGameState = [A,NewPlayer, []].
 
 
 
@@ -148,10 +152,9 @@ new_move(GameState, Move, NewGameState):-
     CI-RI-CF-RF = Move,
     position(Board, CI-RI, Piece),
     put_piece(Board, CI-RI, empty, CleanedBoard),
-    put_piece(Board, CF-RF, Piece, NewBoard),
+    put_piece(CleanedBoard, CF-RF, Piece, NewBoard),
     % append(CF-RF,NewAlreadyJumped)
     NewGameState = [NewBoard, Player, AlreadyJumped].
-
 
 
 
