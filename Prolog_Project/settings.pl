@@ -61,10 +61,10 @@ set_difficulty(Machine):-
 
 
 choose_board(Size):-
-    write('Board size: 8? '),
+    write('Board size: 8, 6? '),
     repeat,
     read_number(Size),
-    member(Size, [8]), !.
+    member(Size, [6, 8]), !.
 
 
 choose_player(Player):-
@@ -108,6 +108,15 @@ board(8,[
         [empty,     white,      white,     white,     white,     white,     white,     empty],
         [empty,     white,      white,     white,     white,     white,     white,     empty]
         
+]).
+
+board(6,[
+        [empty,     empty,      empty,     black,     empty,     black,     empty,     empty],
+        [empty,     empty,      empty,     empty,     empty,     empty,     empty,     empty],
+        [empty,     black,      black,     empty,     empty,     empty,     empty,     black],
+        [empty,     empty,      white,     empty,     empty,     empty,     empty,     empty],
+        [empty,     empty,      empty,     empty,     empty,     empty,     empty,     empty],
+        [empty,     white,      empty,     white,     white,     empty,     white,     empty]
 ]).
 
 symbol(empty, ' '):-!.

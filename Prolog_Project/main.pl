@@ -9,6 +9,7 @@ game_cycle(GameState):-
     Winner \= none, !,
     display_game(GameState),
     show_winner(Winner).
+
 game_cycle(GameState):-
     display_game(GameState),
     user_turn(GameState),
@@ -48,8 +49,8 @@ play:- settings(GameState), !, game_cycle(GameState).
 
 choose_move([Board, Player, AlreadyJumped], CI-RI-CF-RF):-
     get_move(Board, ColI-RowI, ColF-RowF),
-    ((validate_move_normal(Board, Player, AlreadyJumped, ColI-RowI-ColF-RowF), CI is ColI, RI is RowI, CF is ColF, RF is RowF);
-    (\+validate_move_normal(Board, Player, AlreadyJumped, ColI-RowI-ColF-RowF),
+    ((validate_move_normal(Board, Player, ColI-RowI-ColF-RowF), CI is ColI, RI is RowI, CF is ColF, RF is RowF);
+    (\+validate_move_normal(Board, Player, ColI-RowI-ColF-RowF),
     write('The selected move is not valid, please try again!\n'),
     choose_move([Board, Player, AlreadyJumped], CI-RI-CF-RF))).
 
@@ -58,7 +59,7 @@ choose_move([Board, Player, AlreadyJumped], CI-RI-CF-RF):-
 % Direction: 1 - Horizontal; 2 - Vertical; 3 - Diagonal (\); 4 - Diagonal (//).
 
 
-validate_move_normal(Board, Player, AlreadyJumped, CI-RI-CF-RF):-
+validate_move_normal(Board, Player, CI-RI-CF-RF):-
     position(Board, CI-RI, Piece),
     player_color(Player, Piece), 
     CF>=1, RF>=1, CF=<8, RF=<8,
@@ -111,6 +112,14 @@ get_direction(CI-RI-CF-RF, Direction, JumpSize):-
     (CI == CF, Direction is 2, Diff is RF - RI, abs(Diff, B), JumpSize is B);
     ((CF - CI) =:= (RF - RI), Diff is CF - CI, Direction is 3, abs(Diff, C), JumpSize is C);
     ((CF - CI) =:= -(RF - RI), Diff is CF - CI, Direction is 4, abs(Diff, D), JumpSize is D).
+
+already_jumped(CF-RF, []).
+
+already_jumped(CF-RF, AlreadyJumped):-
+    [H|T] = AlreadyJumped,
+    ColJump-RowJump = H,
+    (ColJump \= CF; RowJump \= RF), !,
+    already_jumped(CF-RF, T).
 
 % ------------------------Possible Hard Mode------------------------------
 /*
@@ -239,10 +248,7 @@ show_winner(Winner):-
 
 is_winner(Board, Player):-
     player_color(Player, Piece),
-    out_of_pieces(Board, Piece),
     check(Board, Piece).
-
-out_of_pieces(Board, Piece):- position(Board, C-R ,Piece).
 
 check(Board, Piece):-
     find_player_pieces(Board, Piece, Pieces),
@@ -278,5 +284,5 @@ check_all_adjacent([C-R | Rest], Board, Piece, Acc, TotalCount) :-
 
 remove_coordinates_outside_range([], []).
 remove_coordinates_outside_range([C-R | Rest], Filtered) :-
-    (C >= 1, C =< 3, R >= 1, R =< 3) ->
+    (C >= 1, C =< 8, R >= 1, R =< 8) ->
         Filtered = [C-R | NewRest], remove_coordinates_outside_range(Rest, NewRest) ; remove_coordinates_outside_range(Rest, Filtered).
