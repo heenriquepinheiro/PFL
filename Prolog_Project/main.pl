@@ -99,8 +99,13 @@ validate_move_normal([Board, Player, AlreadyJumped], CI-RI-CF-RF):-
     get_direction(CI-RI-CF-RF, Direction, JumpSize),
     check_jump_size_normal(CI-RI, Board, Player, Direction, RealJumpSize), 
     JumpSize =:= RealJumpSize,
-    (empty_list(AlreadyJumped,true); (empty_list(AlreadyJumped,false), RealJumpSize > 1)),
+    (empty_list(AlreadyJumped,true); (empty_list(AlreadyJumped,false), RealJumpSize > 1, selected_previous_piece(AlreadyJumped, CI-RI))),
     already_jumped(CF-RF, AlreadyJumped).
+
+selected_previous_piece(AlreadyJumped, CI-RI):-
+    [LastMove|_] = AlreadyJumped,
+    CLast-RLast = LastMove,
+    CI == CLast, RI == RLast.
 
 check_jump_size_normal(CI-RI, Board, Player, Direction, RealJumpSize):-
     Direction == 1,
