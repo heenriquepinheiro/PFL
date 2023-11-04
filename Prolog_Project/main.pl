@@ -3,13 +3,13 @@
 :- consult(settings).
 :- consult(utils).
 
-
+/*
 game_cycle(GameState):-
     game_over(GameState, Winner), 
     Winner \= none, !,
     display_game(GameState),
     show_winner(Winner).
-
+*/
 game_cycle(GameState):-
     display_game(GameState),
     user_turn(GameState),
@@ -78,7 +78,7 @@ validate_move_normal([Board, Player, AlreadyJumped], CI-RI-CF-RF):-
     in_bounds(Board,CF-RF),
     obstructed(Board, CI-RI-CF-RF),
     get_direction(CI-RI-CF-RF, Direction, JumpSize),
-    check_jump_size_normal(CI-RI, Board, Player, Direction, RealJumpSize), !,
+    check_jump_size_normal(CI-RI, Board, Player, Direction, RealJumpSize), 
     JumpSize =:= RealJumpSize,
     already_jumped(CF-RF, AlreadyJumped).
 
