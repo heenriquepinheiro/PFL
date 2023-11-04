@@ -21,15 +21,16 @@ game_cycle(GameState):-
 
 jump_mode([Board, Player, AlreadyJumped], JumpState):-
     ((empty_list(AlreadyJumped, true), JumpState = [Board, Player, AlreadyJumped], write('No jump\n'));
-    (empty_list(AlreadyJumped, false), JumpState = [Board, Player, AlreadyJumped], [LastMove|T] = AlreadyJumped, \+surround_pieces(Board, Player, LastMove), write('You jumped, but cant jump more\n'));
-    (empty_list(AlreadyJumped, false), JumpState = [Board, Player, AlreadyJumped], [LastMove|T] = AlreadyJumped, surround_pieces(Board, Player, LastMove), write('Little Rabit can jump more!!\n'))).
+    (empty_list(AlreadyJumped, false), JumpState = [Board, Player, AlreadyJumped], [LastMove|T] = AlreadyJumped, \+surround_pieces([Board, Player, AlreadyJumped], LastMove), write('You jumped, but cant jump more\n'));
+    (empty_list(AlreadyJumped, false), JumpState = [Board, Player, AlreadyJumped], [LastMove|T] = AlreadyJumped, surround_pieces([Board, Player, AlreadyJumped], LastMove), write('Little Rabit can jump more!!\n'))).
     
-surround_pieces(Board, Player, CI-RI):-
+surround_pieces([Board, Player, AlreadyJumped], CI-RI):-
     check_jump_size_normal(CI-RI, Board, Player, 1, RealJumpSize1),
     check_jump_size_normal(CI-RI, Board, Player, 2, RealJumpSize2),
     check_jump_size_normal(CI-RI, Board, Player, 3, RealJumpSize3),
     check_jump_size_normal(CI-RI, Board, Player, 4, RealJumpSize4),
-    (RealJumpSize1 > 1; RealJumpSize2 > 1; RealJumpSize3 > 1; RealJumpSize4 > 1).
+    (RealJumpSize1 > 1; RealJumpSize2 > 1; RealJumpSize3 > 1; RealJumpSize4 > 1),
+    valid_moves_piece([Board, Player, AlreadyJumped], CI-RI, ListOfMoves).
 
 user_turn([_, Player, _]):-
     name_of(Player, Name),
@@ -49,25 +50,37 @@ play:- settings(GameState), !, game_cycle(GameState).
 
 choose_move([Board, Player, AlreadyJumped], CI-RI-CF-RF):-
     get_move(Board, ColI-RowI, ColF-RowF),
-    ((validate_move_normal(Board, Player, ColI-RowI-ColF-RowF), CI is ColI, RI is RowI, CF is ColF, RF is RowF);
-    (\+validate_move_normal(Board, Player, ColI-RowI-ColF-RowF),
+    ((validate_move_normal([Board, Player, AlreadyJumped], ColI-RowI-ColF-RowF), CI is ColI, RI is RowI, CF is ColF, RF is RowF);
+    (\+validate_move_normal([Board, Player, AlreadyJumped], ColI-RowI-ColF-RowF),
     write('The selected move is not valid, please try again!\n'),
     choose_move([Board, Player, AlreadyJumped], CI-RI-CF-RF))).
+
+valid_moves(GameState, Player, ListOfMoves):-
+    [Board,Player,[]] = GameState,
+    findall(CI-RI-CF-RF, validate_move_normal([Board,Player,AlreadyJumped],CI-RI-CF-RF),ListOfMoves).
+
+valid_moves(GameState, _, ListOfMoves):-
+    findall(CI-RI-CF-RF, validate_move_normal(GameState,CI-RI-CF-RF),ListOfMoves),
+    \+length(ListOfMoves, 0), !.
+
+valid_moves_piece(GameState, CI-RI, ListOfMoves):-
+    findall(CI-RI-CF-RF, validate_move_normal(GameState,CI-RI-CF-RF),ListOfMoves),
+    \+length(ListOfMoves, 0), !.
 
 
 
 % Direction: 1 - Horizontal; 2 - Vertical; 3 - Diagonal (\); 4 - Diagonal (//).
 
-
-validate_move_normal(Board, Player, CI-RI-CF-RF):-
+validate_move_normal([Board, Player, AlreadyJumped], CI-RI-CF-RF):-
+    length(Board, Size),
     position(Board, CI-RI, Piece),
     player_color(Player, Piece), 
-    CF>=1, RF>=1, CF=<8, RF=<8,
+    in_bounds(Board,CF-RF),
     obstructed(Board, CI-RI-CF-RF),
     get_direction(CI-RI-CF-RF, Direction, JumpSize),
     check_jump_size_normal(CI-RI, Board, Player, Direction, RealJumpSize), !,
-
-    JumpSize =:= RealJumpSize.
+    JumpSize =:= RealJumpSize,
+    already_jumped(CF-RF, AlreadyJumped).
 
 check_jump_size_normal(CI-RI, Board, Player, Direction, RealJumpSize):-
     Direction == 1,
@@ -216,7 +229,7 @@ new_move(GameState, Move, NewGameState):-
 isJumped(C-R, List) :-
     member(C-R, List).
 
-
+/*
 isValid(X, Y):- X >= 1 , X =< 8, Y >= 1 , Y =< 8.
 
 get_line_length(Board, X-Y, L):-
@@ -232,7 +245,7 @@ get_line_length_aux(Board, X-Y, YN, L) :-
     position(Board, X-Y, Piece),
     position(Board, X-YN, Npiece),
     ((Piece == Npiece, L is 1) ; (Piece \= Npiece, L is 0)).
-
+*/
 
 
 % ------------------------ Check Winner ------------------------------
@@ -261,7 +274,7 @@ see_all([], _, _).
 see_all([H|Res], Board, Piece):-
     C-R = H,
     adjacent_positions(C-R, AdjacentPositions),
-    remove_coordinates_outside_range(AdjacentPositions, Filtered),
+    remove_coordinates_outside_range(AdjacentPositions, Filtered, Board),
     check_all_adjacent(Filtered, Board, Piece, 0, Acc),
     Acc < 1,
     see_all(Res, Board, Piece).
@@ -282,7 +295,7 @@ check_all_adjacent([C-R | Rest], Board, Piece, Acc, TotalCount) :-
     (position(Board, C-R, AdjacentPiece), Piece \= AdjacentPiece -> NewAcc is Acc ; NewAcc is Acc + 1),
     check_all_adjacent(Rest, Board, Piece, NewAcc, TotalCount).
 
-remove_coordinates_outside_range([], []).
-remove_coordinates_outside_range([C-R | Rest], Filtered) :-
-    (C >= 1, C =< 8, R >= 1, R =< 8) ->
-        Filtered = [C-R | NewRest], remove_coordinates_outside_range(Rest, NewRest) ; remove_coordinates_outside_range(Rest, Filtered).
+remove_coordinates_outside_range([], [], Board).
+remove_coordinates_outside_range([C-R | Rest], Filtered, Board) :-
+    (in_bounds(Board, C-R)) ->
+        Filtered = [C-R | NewRest], remove_coordinates_outside_range(Rest, NewRest, Board) ; remove_coordinates_outside_range(Rest, Filtered, Board).
