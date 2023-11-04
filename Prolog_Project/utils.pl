@@ -46,3 +46,6 @@ put_piece(Board, C-R, Piece, NewBoard):-
 replace(Idx, Piece, Target, NewTarget):-
     nth0(Idx, Target, _, MidTarget),
     nth0(Idx, NewTarget, Piece, MidTarget).
+
+empty_list([], true).
+empty_list([_|_], false).

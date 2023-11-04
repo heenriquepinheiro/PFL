@@ -10,21 +10,13 @@ game_cycle(GameState):-
     user_turn(GameState),
     choose_move(GameState, Move), !,
     new_move(GameState, Move, NewGameState), !,
-    /*
-    jump_mode(NewGameState, Move), !,
-    change_players(GameState, NewGameState),
-    write('passou\n'), */
-    game_cycle(NewGameState).
+    jump_mode(NewGameState, JumpState), !,
+    change_players(NewGameState, FinalGameState),
+    game_cycle(FinalGameState).
 
-jump_mode(GameState, Move):-
-    CI-RI-CF-RF = Move,
-    abs(CF - CI, Res1), Res1 >= 2, abs(RF - RI, Res2), Res2 >= 2,
-    validate_jump(Gamestate, Move).
-
-jump_mode(GameState, Move):-
-    CI-RI-CF-RF = Move,
-    abs(CF - CI, Res1), Res1 < 2, abs(RF - RI, Res2), Res2 < 2,
-    validate_step(GameState, Move).
+jump_mode([Board, Player, AlreadyJumped], JumpState):-
+    (empty_list(AlreadyJumped, true), write('Not a bunny here...\n')); (\+empty_list(AlreadyJumped, true), write('Ahah! Caught jump\n')).
+    
 
 
 user_turn([_, Player, _]):-
@@ -33,7 +25,7 @@ user_turn([_, Player, _]):-
 
 
 display_game([Board,_,_]) :-
-    clear_console,
+    % clear_console,
     length(Board, Size),
     display_header(1, Size),
     display_bar(Size),
@@ -186,13 +178,8 @@ obstructed(Board, CI-RI-CF-RF):-
     (NextPlace \= CurrPiece).
 
     
-change_players(GameState,NewGameState):-
-    [Board,Player,_] = GameState,
-    player_change(Player, NewPlayer),
-    format('Res ~a\n', [NewPlayer]),
-    AlreadyJumped = [],
-    NewGameState = [Board, NewPlayer, AlreadyJumped],
-    format('Res2 ~a\n', [NewPlayer]).
+change_players([Board, Player, _], [Board, NewPlayer, []]) :-
+    player_change(Player, NewPlayer).
 
 
 new_move(GameState, Move, NewGameState):-
@@ -201,7 +188,8 @@ new_move(GameState, Move, NewGameState):-
     position(Board, CI-RI, Piece),
     put_piece(Board, CI-RI, empty, CleanedBoard),
     put_piece(CleanedBoard, CF-RF, Piece, NewBoard),
-    append([CF-RF],AlreadyJumped, NewAlreadyJumped),
+    Diff1 is CF - CI, abs(Diff1, Res1), Diff2 is RF - RI, abs(Diff2, Res2),
+    (((Res1 >= 2; Res2 >=2), append([CF-RF],AlreadyJumped, NewAlreadyJumped)); (Res1 < 2, Res2 < 2)),
     NewGameState = [NewBoard, Player, NewAlreadyJumped].
 
 
