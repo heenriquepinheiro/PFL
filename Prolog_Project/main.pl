@@ -20,16 +20,35 @@ game_cycle(GameState):-
     game_cycle(FinalGameState).
 
 jump_mode([Board, Player, AlreadyJumped], JumpState):-
-    ((empty_list(AlreadyJumped, true), JumpState = [Board, Player, AlreadyJumped], write('No jump\n'));
-    (empty_list(AlreadyJumped, false), JumpState = [Board, Player, AlreadyJumped], [LastMove|T] = AlreadyJumped, \+surround_pieces([Board, Player, AlreadyJumped], LastMove), write('You jumped, but cant jump more\n'));
-    (empty_list(AlreadyJumped, false), JumpState = [Board, Player, AlreadyJumped], [LastMove|T] = AlreadyJumped, surround_pieces([Board, Player, AlreadyJumped], LastMove), write('Little Rabit can jump more!!\n'))).
+    empty_list(AlreadyJumped, true),
+    JumpState = [Board, Player, AlreadyJumped].
+
+jump_mode([Board, Player, AlreadyJumped], JumpState):-
+    empty_list(AlreadyJumped, false), [LastMove|T] = AlreadyJumped,
+    \+jump_possible([Board, Player, AlreadyJumped], LastMove),
+    JumpState = [Board, Player, AlreadyJumped].
+
+jump_mode([Board, Player, AlreadyJumped], JumpState):-
+    empty_list(AlreadyJumped, false), [LastMove|T] = AlreadyJumped,
+    jump_possible([Board, Player, AlreadyJumped], LastMove),
+    ask_to_jump(Choice),
+    ((Choice == 110, JumpState = [Board, Player, AlreadyJumped]);
+    (Choice == 121,
+    display_game([Board, Player, AlreadyJumped]),
+    choose_move([Board, Player, AlreadyJumped], Move),
+    new_move([Board, Player, AlreadyJumped], Move, NewGameState),
+    jump_mode(NewGameState, JumpState)
+    )).
+
+% y - 121, n - 110
+ask_to_jump(Choice):-
+    write('Do you want to continue jumping (y/n): '),
+    repeat,
+    get_code(Choice),
+    member(Choice, [121, 110]), !.
+
     
-surround_pieces([Board, Player, AlreadyJumped], CI-RI):-
-    check_jump_size_normal(CI-RI, Board, Player, 1, RealJumpSize1),
-    check_jump_size_normal(CI-RI, Board, Player, 2, RealJumpSize2),
-    check_jump_size_normal(CI-RI, Board, Player, 3, RealJumpSize3),
-    check_jump_size_normal(CI-RI, Board, Player, 4, RealJumpSize4),
-    (RealJumpSize1 > 1; RealJumpSize2 > 1; RealJumpSize3 > 1; RealJumpSize4 > 1),
+jump_possible([Board, Player, AlreadyJumped], CI-RI):-
     valid_moves_piece([Board, Player, AlreadyJumped], CI-RI, ListOfMoves).
 
 user_turn([_, Player, _]):-
@@ -80,6 +99,7 @@ validate_move_normal([Board, Player, AlreadyJumped], CI-RI-CF-RF):-
     get_direction(CI-RI-CF-RF, Direction, JumpSize),
     check_jump_size_normal(CI-RI, Board, Player, Direction, RealJumpSize), 
     JumpSize =:= RealJumpSize,
+    (empty_list(AlreadyJumped,true); (empty_list(AlreadyJumped,false), RealJumpSize > 1)),
     already_jumped(CF-RF, AlreadyJumped).
 
 check_jump_size_normal(CI-RI, Board, Player, Direction, RealJumpSize):-
