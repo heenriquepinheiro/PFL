@@ -11,13 +11,20 @@ game_cycle(GameState):-
     choose_move(GameState, Move), !,
     new_move(GameState, Move, NewGameState), !,
     jump_mode(NewGameState, JumpState), !,
-    change_players(NewGameState, FinalGameState),
+    change_players(JumpState, FinalGameState),
     game_cycle(FinalGameState).
 
 jump_mode([Board, Player, AlreadyJumped], JumpState):-
-    (empty_list(AlreadyJumped, true), write('Not a bunny here...\n')); (\+empty_list(AlreadyJumped, true), write('Ahah! Caught jump\n')).
+    ((empty_list(AlreadyJumped, true), JumpState = [Board, Player, AlreadyJumped], write('No jump\n'));
+    (empty_list(AlreadyJumped, false), JumpState = [Board, Player, AlreadyJumped], [LastMove|T] = AlreadyJumped, \+surround_pieces(Board, Player, LastMove), write('You jumped, but cant jump more\n'));
+    (empty_list(AlreadyJumped, false), JumpState = [Board, Player, AlreadyJumped], [LastMove|T] = AlreadyJumped, surround_pieces(Board, Player, LastMove), write('Little Rabit can jump more!!\n'))).
     
-
+surround_pieces(Board, Player, CI-RI):-
+    check_jump_size_normal(CI-RI, Board, Player, 1, RealJumpSize1),
+    check_jump_size_normal(CI-RI, Board, Player, 2, RealJumpSize2),
+    check_jump_size_normal(CI-RI, Board, Player, 3, RealJumpSize3),
+    check_jump_size_normal(CI-RI, Board, Player, 4, RealJumpSize4),
+    (RealJumpSize1 > 1; RealJumpSize2 > 1; RealJumpSize3 > 1; RealJumpSize4 > 1).
 
 user_turn([_, Player, _]):-
     name_of(Player, Name),
