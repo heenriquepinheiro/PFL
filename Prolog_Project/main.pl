@@ -4,7 +4,11 @@
 :- consult(utils).
 
 
-
+game_cycle(GameState):-
+    game_over(GameState, Winner), 
+    Winner \= none, !,
+    display_game(GameState),
+    show_winner(Winner).
 game_cycle(GameState):-
     display_game(GameState),
     user_turn(GameState),
@@ -219,3 +223,60 @@ get_line_length_aux(Board, X-Y, YN, L) :-
     position(Board, X-Y, Piece),
     position(Board, X-YN, Npiece),
     ((Piece == Npiece, L is 1) ; (Piece \= Npiece, L is 0)).
+
+
+
+% ------------------------ Check Winner ------------------------------
+game_over(GameState, Winner):-
+    [Board, Player, AlreadyJumped] = GameState,
+    (is_winner(Board, player1) -> Winner = player1 ; is_winner(Board, player2) -> Winner = player2 ; Winner = none).
+
+show_winner(Winner):-
+    name_of(Winner, Name),
+    write('\n------------------------\n'),
+    format('Winner is ~a!\n', [Name]),
+    write('------------------------\n').
+
+is_winner(Board, Player):-
+    player_color(Player, Piece),
+    out_of_pieces(Board, Piece),
+    check(Board, Piece).
+
+out_of_pieces(Board, Piece):- position(Board, C-R ,Piece).
+
+check(Board, Piece):-
+    find_player_pieces(Board, Piece, Pieces),
+    see_all(Pieces, Board, Piece).
+
+find_player_pieces(Board, Piece, Pieces):-
+    findall(Col-Row, position(Board, Col-Row, Piece), Pieces).
+
+see_all([], _, _).
+see_all([H|Res], Board, Piece):-
+    C-R = H,
+    adjacent_positions(C-R, AdjacentPositions),
+    remove_coordinates_outside_range(AdjacentPositions, Filtered),
+    check_all_adjacent(Filtered, Board, Piece, 0, Acc),
+    Acc < 1,
+    see_all(Res, Board, Piece).
+    
+adjacent_positions(C-R, AdjacentPositions) :-
+    C1 is C - 1, R1 is R - 1,
+    C2 is C, R2 is R - 1,
+    C3 is C + 1, R3 is R - 1,
+    C4 is C - 1, R4 is R,
+    C5 is C + 1, R5 is R,
+    C6 is C - 1, R6 is R + 1,
+    C7 is C, R7 is R + 1,
+    C8 is C + 1, R8 is R + 1,
+    AdjacentPositions = [C1-R1, C2-R2, C3-R3, C4-R4, C5-R5, C6-R6, C7-R7, C8-R8].
+
+check_all_adjacent([], _, _, Acc, Acc).
+check_all_adjacent([C-R | Rest], Board, Piece, Acc, TotalCount) :-
+    (position(Board, C-R, AdjacentPiece), Piece \= AdjacentPiece -> NewAcc is Acc ; NewAcc is Acc + 1),
+    check_all_adjacent(Rest, Board, Piece, NewAcc, TotalCount).
+
+remove_coordinates_outside_range([], []).
+remove_coordinates_outside_range([C-R | Rest], Filtered) :-
+    (C >= 1, C =< 3, R >= 1, R =< 3) ->
+        Filtered = [C-R | NewRest], remove_coordinates_outside_range(Rest, NewRest) ; remove_coordinates_outside_range(Rest, Filtered).
