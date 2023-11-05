@@ -113,12 +113,12 @@ board(8,[
 ]).
 
 board(6,[
-        [empty,     empty,      empty,     black,     empty,     black,     empty,     empty],
-        [empty,     empty,      empty,     empty,     empty,     empty,     empty,     empty],
-        [empty,     black,      black,     empty,     empty,     empty,     empty,     black],
-        [empty,     empty,      white,     empty,     empty,     empty,     empty,     empty],
-        [empty,     empty,      empty,     empty,     empty,     empty,     empty,     empty],
-        [empty,     white,      empty,     white,     white,     empty,     white,     empty]
+        [empty,     empty,      empty,     black,     empty,     black],
+        [empty,     empty,      empty,     empty,     empty,     empty],
+        [empty,     black,      black,     empty,     empty,     empty],
+        [empty,     empty,      white,     empty,     empty,     empty],
+        [empty,     empty,      empty,     empty,     empty,     empty],
+        [empty,     white,      empty,     white,     white,     empty]
 ]).
 
 symbol(empty, ' '):-!.

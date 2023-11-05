@@ -348,3 +348,18 @@ choose_move(GameState, Player, Level, Move):-
     Level == 1, !,
     valid_moves(GameState, Player, ListOfMoves),
     random_item(ListOfMoves, Move).
+
+
+sum_of_adjacents(Board, Piece, Res):-
+    find_player_pieces(Board, Piece, Pieces),
+    count_adjacents(Pieces, Board, Piece, 0, Res).
+
+
+count_adjacents([], _, _, Res, Res).
+count_adjacents([H|T], Board, Piece, Acc, Res):-
+    C-R = H,
+    adjacent_positions(C-R, AdjacentPositions),
+    remove_coordinates_outside_range(AdjacentPositions, Filtered),
+    check_all_adjacent(Filtered, Board, Piece, 0, Acc1),
+    NewAcc is Acc + Acc1,
+    count_adjacents(T, Board, Piece, NewAcc, Res).

@@ -54,3 +54,5 @@ random_item(List, Item):-
     length(List, Len),
     random(0, Len, Idx),
     nth0(Idx, List, Item).
+
+
