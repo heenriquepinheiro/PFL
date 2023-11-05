@@ -4,6 +4,8 @@
 :- consult(utils).
 
 :- dynamic player_color/2.
+:- dynamic difficulty_of/2.
+:- dynamic name_of/2.
 
 % game header
 apart:-

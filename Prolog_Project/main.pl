@@ -65,11 +65,16 @@ play:- settings(GameState), !, game_cycle(GameState).
 
 
 choose_move([Board, Player, AlreadyJumped], CI-RI-CF-RF):-
+    \+difficulty_of(Player, _),
     get_move(Board, ColI-RowI, ColF-RowF),
     ((validate_move_normal([Board, Player, AlreadyJumped], ColI-RowI-ColF-RowF), CI is ColI, RI is RowI, CF is ColF, RF is RowF);
     (\+validate_move_normal([Board, Player, AlreadyJumped], ColI-RowI-ColF-RowF),
     write('The selected move is not valid, please try again!\n'),
     choose_move([Board, Player, AlreadyJumped], CI-RI-CF-RF))).
+
+choose_move([Board, Player, AlreadyJumped], Move):-
+    difficulty_of(Player, Level),                  
+    choose_move([Board,Player,AlreadyJumped], Player, Level, Move), !.
 
 valid_moves(GameState, Player, ListOfMoves):-
     [Board,Player,[]] = GameState,
