@@ -323,3 +323,13 @@ remove_coordinates_outside_range([], [], Board).
 remove_coordinates_outside_range([C-R | Rest], Filtered, Board) :-
     (in_bounds(Board, C-R)) ->
         Filtered = [C-R | NewRest], remove_coordinates_outside_range(Rest, NewRest, Board) ; remove_coordinates_outside_range(Rest, Filtered, Board).
+
+
+% ----------------------- Bot Functions ------------------------------
+
+choose_move(GameState, Player, Level, Move):- 
+    Level == 1, !,
+    valid_moves(GameState, Player, ListOfMoves),
+    length(ListOfMoves, Length),
+    random(0, Length, Index),
+    nth0(Index, ListOfMoves, Move).
