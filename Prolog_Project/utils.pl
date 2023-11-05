@@ -49,3 +49,8 @@ replace(Idx, Piece, Target, NewTarget):-
 
 empty_list([], true).
 empty_list([_|_], false).
+
+random_item(List, Item):-
+    length(List, Len),
+    random(0, Len, Idx),
+    nth0(Idx, List, Item).

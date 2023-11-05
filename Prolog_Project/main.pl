@@ -29,9 +29,21 @@ jump_mode([Board, Player, AlreadyJumped], JumpState):-
     JumpState = [Board, Player, AlreadyJumped].
 
 jump_mode([Board, Player, AlreadyJumped], JumpState):-
+    \+difficulty_of(Player, _),
     empty_list(AlreadyJumped, false), [LastMove|T] = AlreadyJumped,
     jump_possible([Board, Player, AlreadyJumped], LastMove),
     ask_to_jump(Choice),
+    ((Choice == 110, JumpState = [Board, Player, AlreadyJumped]);
+    (Choice == 121,
+    game_cycle([Board, Player, AlreadyJumped])
+    )).
+
+jump_mode([Board, Player, AlreadyJumped], JumpState):-
+    difficulty_of(Player, Level), Level == 1,
+    empty_list(AlreadyJumped, false), [LastMove|T] = AlreadyJumped,
+    jump_possible([Board, Player, AlreadyJumped], LastMove),
+    Choices = [121, 110],
+    random_item(Choices, Choice),
     ((Choice == 110, JumpState = [Board, Player, AlreadyJumped]);
     (Choice == 121,
     game_cycle([Board, Player, AlreadyJumped])
@@ -54,7 +66,7 @@ user_turn([_, Player, _]):-
 
 
 display_game([Board,_,_]) :-
-    clear_console,
+    % clear_console,
     length(Board, Size),
     display_header(1, Size),
     display_bar(Size),
@@ -335,6 +347,4 @@ remove_coordinates_outside_range([C-R | Rest], Filtered, Board) :-
 choose_move(GameState, Player, Level, Move):- 
     Level == 1, !,
     valid_moves(GameState, Player, ListOfMoves),
-    length(ListOfMoves, Length),
-    random(0, Length, Index),
-    nth0(Index, ListOfMoves, Move).
+    random_item(ListOfMoves, Move).
