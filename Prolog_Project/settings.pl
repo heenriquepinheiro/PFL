@@ -136,7 +136,7 @@ get_symbol(Board, Row, Col, Symbol):-
 display_header(Final, Final):-
     format('~d\n  ', [Final]), !.
 display_header(1, Final):-
-    format('\n   ~d   ', [1]),
+    format('\n    ~d   ', [1]),
     Next is 2,
     display_header(Next, Final).
 display_header(Num, Final):-

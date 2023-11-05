@@ -3,13 +3,13 @@
 :- consult(settings).
 :- consult(utils).
 
-/*
+
 game_cycle(GameState):-
     game_over(GameState, Winner), 
     Winner \= none, !,
     display_game(GameState),
     show_winner(Winner).
-*/
+
 game_cycle(GameState):-
     display_game(GameState),
     user_turn(GameState),
@@ -57,7 +57,7 @@ user_turn([_, Player, _]):-
 
 
 display_game([Board,_,_]) :-
-    % clear_console,
+    clear_console,
     length(Board, Size),
     display_header(1, Size),
     display_bar(Size),
