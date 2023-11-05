@@ -34,10 +34,7 @@ jump_mode([Board, Player, AlreadyJumped], JumpState):-
     ask_to_jump(Choice),
     ((Choice == 110, JumpState = [Board, Player, AlreadyJumped]);
     (Choice == 121,
-    display_game([Board, Player, AlreadyJumped]),
-    choose_move([Board, Player, AlreadyJumped], Move),
-    new_move([Board, Player, AlreadyJumped], Move, NewGameState),
-    jump_mode(NewGameState, JumpState)
+    game_cycle([Board, Player, AlreadyJumped])
     )).
 
 % y - 121, n - 110
@@ -247,7 +244,9 @@ new_move(GameState, Move, NewGameState):-
     put_piece(Board, CI-RI, empty, CleanedBoard),
     put_piece(CleanedBoard, CF-RF, Piece, NewBoard),
     Diff1 is CF - CI, abs(Diff1, Res1), Diff2 is RF - RI, abs(Diff2, Res2),
-    (((Res1 >= 2; Res2 >=2), append([CF-RF],AlreadyJumped, NewAlreadyJumped)); (Res1 < 2, Res2 < 2)),
+    (((Res1 >= 2; Res2 >=2),
+    ((empty_list(AlreadyJumped, true), append([CI-RI],AlreadyJumped, L), append([CF-RF], L, NewAlreadyJumped));
+    (empty_list(AlreadyJumped, false), append([CF-RF],AlreadyJumped, NewAlreadyJumped)))); (Res1 < 2, Res2 < 2)),
     NewGameState = [NewBoard, Player, NewAlreadyJumped].
 
 
