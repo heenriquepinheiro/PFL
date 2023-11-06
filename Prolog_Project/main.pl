@@ -14,7 +14,7 @@ game_cycle(GameState):-
     display_game(GameState),
     user_turn(GameState),
     choose_move(GameState, Move), !,
-    new_move(GameState, Move, NewGameState), !,
+    move(GameState, Move, NewGameState), !,
     jump_mode(NewGameState, JumpState), !,
     change_players(JumpState, FinalGameState),
     game_cycle(FinalGameState).
@@ -254,7 +254,7 @@ change_players([Board, Player, _], [Board, NewPlayer, []]) :-
     player_change(Player, NewPlayer).
 
 
-new_move(GameState, Move, NewGameState):-
+move(GameState, Move, NewGameState):-
     [Board, Player, AlreadyJumped] = GameState,
     CI-RI-CF-RF = Move,
     position(Board, CI-RI, Piece),
@@ -270,23 +270,7 @@ new_move(GameState, Move, NewGameState):-
 isJumped(C-R, List) :-
     member(C-R, List).
 
-/*
-isValid(X, Y):- X >= 1 , X =< 8, Y >= 1 , Y =< 8.
 
-get_line_length(Board, X-Y, L):-
-    Y > 0,
-    Y1 is Y-1,
-    Y2 is Y+1,
-    get_line_length_aux(Board, X-Y, Y1, L1), 
-    get_line_length_aux(Board, X-Y, Y2, L2),
-    L is (L1 + L2 + 1).
-get_line_length_aux(Board, X-Y, YN, 0) :- \+ isValid(X, YN).
-get_line_length_aux(Board, X-Y, YN, L) :-
-    isValid(X, YN), 
-    position(Board, X-Y, Piece),
-    position(Board, X-YN, Npiece),
-    ((Piece == Npiece, L is 1) ; (Piece \= Npiece, L is 0)).
-*/
 
 
 % ------------------------ Check Winner ------------------------------
@@ -350,9 +334,10 @@ choose_move(GameState, Player, Level, Move):-
     random_item(ListOfMoves, Move).
 
 
-sum_of_adjacents(Board, Piece, Res):-
+value([Board,_,_], Player, Value):-
+    player_color(Player, Piece),
     find_player_pieces(Board, Piece, Pieces),
-    count_adjacents(Pieces, Board, Piece, 0, Res).
+    count_adjacents(Pieces, Board, Piece, 0, Value).
 
 
 count_adjacents([], _, _, Res, Res).
