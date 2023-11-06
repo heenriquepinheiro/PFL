@@ -3,7 +3,7 @@
 The game developed was Apart, by group Apart_6.
 Group:
 - Francisco Silva Cunha Campos (up202108735)
-- José Henrique Nogueira Campos de Morais Pinheiro (up20218879)
+- José Henrique Nogueira Campos de Morais Pinheiro (up202108879)
 
 ## Installation and Execution
 To install this version of Apart, you first need to download and unzip the files in PFL_TP1_T08_Apart_6.ZIP.
@@ -14,7 +14,7 @@ Apart is a board game for tow players originally played on a 8x8 board with whit
 There are two types of pieces, white and black, and the player who gets white is the first to play.
 The pieces are grouped as follows:
 
-<img src="https://cdn.shopify.com/s/files/1/0578/3502/8664/files/Apart1_300x300.png?v=1682247247" >
+![](images/Apart_initial_board.png)
 
 <br>
 The aim is to move the pieces so that none of their pieces are vertically, horizontally, or diagonally adjacent to each other.
@@ -84,3 +84,25 @@ The two dynamics were developed and experimented with and, in the end, it was de
 In addition to this, another question arose in the finalisation phase, relating to the nomenclature of the requested predicates. Initially, the development of the game was not based on them, in view of their change. However, later on, it became a little difficult to completely fulfil the requested names. However, changes were made so that we could fulfil the request as much as possible.
 
 Aside from this, it can be considered that the implementation of the Apart game with its basic rules, as well as the three modes requested for this project, was a success.
+
+## Game Execution
+
+### Main Menu
+Choose from a variety of game options, so your experience is always fresh!
+
+![](images/apart-1.png)
+
+### Movement
+Just choose your piece first coordinates, and which destination you want. If there's and error, the game will teel you!
+
+![](images/apart-2.png)
+
+### Jump and Jump Validation
+In this case, the jump wasn't valid because the user tried to use a different piece from the one he started jumping with!
+
+![](images/apart-3.png)
+
+### Bots, new Board Sizes and Winner!
+Try your luck against our bots, spice up your gameplay with new board sizes, and of course, be the winner!
+
+![](images/apart-4.png)
