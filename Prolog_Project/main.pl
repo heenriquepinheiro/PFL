@@ -63,13 +63,13 @@ jump_mode([Board, Player, AlreadyJumped], JumpState):-
     JumpState = [Board, Player, AlreadyJumped].
 
 jump_mode([Board, Player, AlreadyJumped], JumpState):-
-    empty_list(AlreadyJumped, false), [LastMove|T] = AlreadyJumped,
+    empty_list(AlreadyJumped, false), [LastMove|_] = AlreadyJumped,
     \+jump_possible([Board, Player, AlreadyJumped], LastMove),
     JumpState = [Board, Player, AlreadyJumped].
 
 jump_mode([Board, Player, AlreadyJumped], JumpState):-
     \+difficulty_of(Player, _),
-    empty_list(AlreadyJumped, false), [LastMove|T] = AlreadyJumped,
+    empty_list(AlreadyJumped, false), [LastMove|_] = AlreadyJumped,
     jump_possible([Board, Player, AlreadyJumped], LastMove),
     ask_to_jump(Choice),
     ((Choice == 110, JumpState = [Board, Player, AlreadyJumped]);
@@ -79,7 +79,7 @@ jump_mode([Board, Player, AlreadyJumped], JumpState):-
 
 jump_mode([Board, Player, AlreadyJumped], JumpState):-
     difficulty_of(Player, 1),
-    empty_list(AlreadyJumped, false), [LastMove|T] = AlreadyJumped,
+    empty_list(AlreadyJumped, false), [LastMove|_] = AlreadyJumped,
     jump_possible([Board, Player, AlreadyJumped], LastMove),
     Choices = [121, 110],
     random_item(Choices, Choice),
@@ -90,7 +90,7 @@ jump_mode([Board, Player, AlreadyJumped], JumpState):-
 
 jump_mode([Board, Player, AlreadyJumped], JumpState):-
     difficulty_of(Player, 2),
-    empty_list(AlreadyJumped, false), [LastMove|T] = AlreadyJumped,
+    empty_list(AlreadyJumped, false), [LastMove|_] = AlreadyJumped,
     jump_possible([Board, Player, AlreadyJumped], LastMove),
     greedy_choice([Board, Player, AlreadyJumped], LastMove, Choice),
     ((Choice == 110, JumpState = [Board, Player, AlreadyJumped]);
@@ -99,7 +99,7 @@ jump_mode([Board, Player, AlreadyJumped], JumpState):-
     )).
 
 greedy_choice(GameState, LastMove, Choice):-
-    [Board, Player, AlreadyJumped] = GameState,
+    [_, Player, _] = GameState,
     valid_moves_piece(GameState, LastMove, Moves),
     value(GameState, Player, ValueNow),
     findall(Value-Move, (member(Move, Moves), 
@@ -120,7 +120,7 @@ ask_to_jump(Choice):-
 
     
 jump_possible([Board, Player, AlreadyJumped], CI-RI):-
-    valid_moves_piece([Board, Player, AlreadyJumped], CI-RI, ListOfMoves).
+    valid_moves_piece([Board, Player, AlreadyJumped], CI-RI, _).
 
 user_turn([_, Player, _]):-
     name_of(Player, Name),
@@ -152,7 +152,6 @@ valid_moves_piece(GameState, CI-RI, ListOfMoves):-
 % Direction: 1 - Horizontal; 2 - Vertical; 3 - Diagonal (\); 4 - Diagonal (//).
 
 validate_move([Board, Player, AlreadyJumped], CI-RI-CF-RF):-
-    length(Board, Size),
     position(Board, CI-RI, Piece),
     player_color(Player, Piece), 
     in_bounds(Board,CF-RF),
@@ -161,7 +160,7 @@ validate_move([Board, Player, AlreadyJumped], CI-RI-CF-RF):-
     check_jump_size_normal(CI-RI, Board, Player, Direction, RealJumpSize), 
     JumpSize =:= RealJumpSize,
     (empty_list(AlreadyJumped,true); (empty_list(AlreadyJumped,false), RealJumpSize > 1, selected_previous_piece(AlreadyJumped, CI-RI))),
-    already_jumped(CF-RF, AlreadyJumped).
+    \+already_jumped(CF-RF, AlreadyJumped).
 
 selected_previous_piece(AlreadyJumped, CI-RI):-
     [LastMove|_] = AlreadyJumped,
@@ -208,14 +207,6 @@ get_direction(CI-RI-CF-RF, Direction, JumpSize):-
     ((CF - CI) =:= (RF - RI), Diff is CF - CI, Direction is 3, abs(Diff, C), JumpSize is C);
     ((CF - CI) =:= -(RF - RI), Diff is CF - CI, Direction is 4, abs(Diff, D), JumpSize is D).
 
-already_jumped(CF-RF, []).
-
-already_jumped(CF-RF, AlreadyJumped):-
-    [H|T] = AlreadyJumped,
-    ColJump-RowJump = H,
-    (ColJump \= CF; RowJump \= RF), !,
-    already_jumped(CF-RF, T).
-
 
 % obstructed(+Board, +Coordinates)
 % Checks if there is already a player piece in the position you want to move to.
@@ -246,7 +237,7 @@ move(GameState, Move, NewGameState):-
     NewGameState = [NewBoard, Player, NewAlreadyJumped].
 
 
-isJumped(C-R, List) :-
+already_jumped(C-R, List) :-
     member(C-R, List).
 
 
@@ -257,7 +248,7 @@ isJumped(C-R, List) :-
 % game_over(+GameState, +Winner)
 % Checks if the game is over
 game_over(GameState, Winner):-
-    [Board, Player, AlreadyJumped] = GameState,
+    [Board, _, _] = GameState,
     (is_winner(Board, player1) -> Winner = player1 ; is_winner(Board, player2) -> Winner = player2 ; Winner = none).
 
 
@@ -326,7 +317,7 @@ check_all_adjacent([C-R | Rest], Board, Piece, Acc, TotalCount) :-
 
 % remove_coordinates_outside_range(+Positions, -Filtered, +Board)
 % Remove impossible/out of board positions.
-remove_coordinates_outside_range([], [], Board).
+remove_coordinates_outside_range([], [], _).
 remove_coordinates_outside_range([C-R | Rest], Filtered, Board) :-
     (in_bounds(Board, C-R)) ->
         Filtered = [C-R | NewRest], remove_coordinates_outside_range(Rest, NewRest, Board) ; remove_coordinates_outside_range(Rest, Filtered, Board).
