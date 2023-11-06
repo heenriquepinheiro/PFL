@@ -14,6 +14,8 @@ Apart is a board game for tow players originally played on a 8x8 board with whit
 There are two types of pieces, white and black, and the player who gets white is the first to play.
 The pieces are grouped as follows:
 
+<img src="/Apart_initial_board.png" alt="Alt Text" width="50%" height="50%">
+
 The aim is to move the pieces so that none of their pieces are vertically, horizontally, or diagonally adjacent to each other.
 
 The players play alternately in sequences of moves, which can be of two types:
