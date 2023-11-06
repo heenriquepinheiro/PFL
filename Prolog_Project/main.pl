@@ -8,8 +8,7 @@ game_cycle(GameState):-
     game_over(GameState, Winner), 
     Winner \= none, !,
     display_game(GameState),
-    show_winner(Winner).
-
+    show_winner(Winner), !.
 game_cycle(GameState):-
     display_game(GameState),
     user_turn(GameState),
@@ -39,7 +38,7 @@ jump_mode([Board, Player, AlreadyJumped], JumpState):-
     )).
 
 jump_mode([Board, Player, AlreadyJumped], JumpState):-
-    difficulty_of(Player, Level), Level == 1,
+    difficulty_of(Player, Level),
     empty_list(AlreadyJumped, false), [LastMove|T] = AlreadyJumped,
     jump_possible([Board, Player, AlreadyJumped], LastMove),
     Choices = [121, 110],
@@ -89,8 +88,8 @@ choose_move([Board, Player, AlreadyJumped], Move):-
     choose_move([Board,Player,AlreadyJumped], Player, Level, Move), !.
 
 valid_moves(GameState, Player, ListOfMoves):-
-    [Board,Player,[]] = GameState,
-    findall(CI-RI-CF-RF, validate_move_normal([Board,Player,AlreadyJumped],CI-RI-CF-RF),ListOfMoves).
+    [Board,Player,_] = GameState,
+    findall(CI-RI-CF-RF, validate_move_normal([Board,Player,[]],CI-RI-CF-RF),ListOfMoves).
 
 valid_moves(GameState, _, ListOfMoves):-
     findall(CI-RI-CF-RF, validate_move_normal(GameState,CI-RI-CF-RF),ListOfMoves),
@@ -121,8 +120,7 @@ selected_previous_piece(AlreadyJumped, CI-RI):-
     CLast-RLast = LastMove,
     CI == CLast, RI == RLast.
 
-check_jump_size_normal(CI-RI, Board, Player, Direction, RealJumpSize):-
-    Direction == 1,
+check_jump_size_normal(CI-RI, Board, Player, 1, RealJumpSize):-
     ColBack is CI - 1, ColFront is CI + 1,
     player_color(Player, PlayerColor),
     ((position(Board, ColBack-RI, PlayerColor), position(Board, ColFront-RI, PlayerColor), RealJumpSize is 3);
@@ -130,8 +128,7 @@ check_jump_size_normal(CI-RI, Board, Player, Direction, RealJumpSize):-
     (position(Board, ColBack-RI, PlayerColor), \+position(Board, ColFront-RI, PlayerColor), RealJumpSize is 2);
     (\+position(Board, ColBack-RI, PlayerColor), \+position(Board, ColFront-RI, PlayerColor), RealJumpSize is 1)).
 
-check_jump_size_normal(CI-RI, Board, Player, Direction, RealJumpSize):-
-    Direction == 2,
+check_jump_size_normal(CI-RI, Board, Player, 2, RealJumpSize):-
     RowBack is RI - 1, RowFront is RI + 1,
     player_color(Player, PlayerColor),
     ((position(Board, CI-RowBack, PlayerColor), position(Board, CI-RowFront, PlayerColor), RealJumpSize is 3);
@@ -139,8 +136,7 @@ check_jump_size_normal(CI-RI, Board, Player, Direction, RealJumpSize):-
     (position(Board, CI-RowBack, PlayerColor), \+position(Board, CI-RowFront, PlayerColor), RealJumpSize is 2);
     (\+position(Board, CI-RowBack, PlayerColor), \+position(Board, CI-RowFront, PlayerColor), RealJumpSize is 1)).
 
-check_jump_size_normal(CI-RI, Board, Player, Direction, RealJumpSize):-
-    Direction == 3,
+check_jump_size_normal(CI-RI, Board, Player, 3, RealJumpSize):-
     ColBack is CI - 1, ColFront is CI + 1,
     RowBack is RI - 1, RowFront is RI + 1,
     player_color(Player, PlayerColor),
@@ -149,8 +145,7 @@ check_jump_size_normal(CI-RI, Board, Player, Direction, RealJumpSize):-
     (position(Board, ColBack-RowBack, PlayerColor), \+position(Board, ColFront-RowFront, PlayerColor), RealJumpSize is 2);
     (\+position(Board, ColBack-RowBack, PlayerColor), \+position(Board, ColFront-RowFront, PlayerColor), RealJumpSize is 1)).
 
-check_jump_size_normal(CI-RI, Board, Player, Direction, RealJumpSize):-
-    Direction == 4,
+check_jump_size_normal(CI-RI, Board, Player, 4, RealJumpSize):-
     ColBack is CI - 1, ColFront is CI + 1,
     RowBack is RI - 1, RowFront is RI + 1,
     player_color(Player, PlayerColor),
@@ -173,76 +168,6 @@ already_jumped(CF-RF, AlreadyJumped):-
     (ColJump \= CF; RowJump \= RF), !,
     already_jumped(CF-RF, T).
 
-% ------------------------Possible Hard Mode------------------------------
-/*
-validate_move_hard(Board, Player, AlreadyJumped, CI-RI-CF-RF):-
-    position(Board, CI-RI, Piece),
-    player_color(Player, Piece), 
-    CF>=1, RF>=1, CF=<8, RF=<8,
-    obstructed(Board, CI-RI-CF-RF),
-    get_direction(CI-RI-CF-RF, Direction, JumpSize),
-    check_jump_size_hard(CI-RI, Board, Player, Direction, RealJumpSize), !,
-
-    JumpSize =:= RealJumpSize.
-
-check_jump_size_hard(CI-RI, Board, Player, Direction, RealJumpSize):-
-    (Direction == 1, Acc is 1- CI,  check_jump_size_aux(CI-RI, Board, Player, Direction, 0, RealJumpSize, Acc));
-    (Direction == 2, Acc is 1- RI,  check_jump_size_aux(CI-RI, Board, Player, Direction, 0, RealJumpSize, Acc));
-    (Direction == 3, check_jump_size_aux(CI-RI, Board, Player, Direction, 0, RealJumpSize, -7));
-    (Direction == 4, check_jump_size_aux(CI-RI, Board, Player, Direction, 0, RealJumpSize, -7)).
-
-check_jump_size_aux(CI-RI, Board, Player, Direction, CurrJS, RealJumpSize, Acc):-
-    length(Board, Size),
-    ((Direction =:= 1, Col is CI + Acc, Col > Size);
-    (Direction =:= 2, Row is RI + Acc, Row > Size);
-    (Direction =:= 3, Col is CI + Acc, Row is RI + Acc, (Col > Size; Row > Size));
-    (Direction =:= 4, Col is CI + Acc, Row is RI - Acc, (Col > Size; Row < 1))), !,
-    RealJumpSize is CurrJS.
-
-
-check_jump_size_aux(CI-RI, Board, Player, Direction, CurrJS, RealJumpSize, Acc):-
-    length(Board, Size),
-    Direction == 1, NewCol is Acc + CI, NewCol =< Size,
-    player_color(Player, PlayerPiece),
-    position(Board, NewCol-RI, NewPiece),
-    (player_color(Player,NewPiece), NewRealJumpSize is CurrJS + 1; \+player_color(Player,NewPiece), NewRealJumpSize is CurrJS),
-    NewAcc is Acc+1,
-    check_jump_size_aux(CI-RI, Board, Player, Direction, NewRealJumpSize, RealJumpSize, NewAcc).
-
-check_jump_size_aux(CI-RI, Board, Player, Direction, CurrJS, RealJumpSize, Acc):-
-    length(Board,Size),
-    Direction == 2, NewRow is Acc + RI, NewRow =< Size,
-    player_color(Player, PlayerPiece),
-    position(Board, CI-NewRow, NewPiece),
-    (player_color(Player,NewPiece), NewRealJumpSize is CurrJS + 1; \+player_color(Player,NewPiece), NewRealJumpSize is CurrJS),
-    NewAcc is Acc+1,
-    check_jump_size_aux(CI-RI, Board, Player, Direction, NewRealJumpSize, RealJumpSize, NewAcc).
-
-check_jump_size_aux(CI-RI, Board, Player, Direction, CurrJS, RealJumpSize, Acc):-
-    length(Board,Size),
-    Direction == 3,
-    NewCol is CI + Acc, NewCol =< Size,
-    NewRow is RI + Acc, NewRow =< Size,
-    (((NewCol<1;NewRow<1), NewAcc is Acc + 1, check_jump_size_aux(CI-RI, Board, Player, Direction, CurrJS, RealJumpSize, NewAcc));(NewCol>=1, NewRow>=1,
-    player_color(Player, PlayerPiece),
-    position(Board, NewCol-NewRow, NewPiece),
-    (player_color(Player,NewPiece), NewRealJumpSize is CurrJS + 1; \+player_color(Player,NewPiece), NewRealJumpSize is CurrJS),
-    NewAcc is Acc+1,
-    check_jump_size_aux(CI-RI, Board, Player, Direction, NewRealJumpSize, RealJumpSize, NewAcc))).
-
-check_jump_size_aux(CI-RI, Board, Player, Direction, CurrJS, RealJumpSize, Acc):-
-    length(Board,Size),
-    Direction == 4,
-    NewCol is CI + Acc, NewCol =< Size,
-    NewRow is RI - Acc, NewRow >= 1,
-    (((NewCol<1;NewRow>Size), NewAcc is Acc + 1, NewRealJumpSize is CurrJS, check_jump_size_aux(CI-RI, Board, Player, Direction, NewRealJumpSize, RealJumpSize, NewAcc));(NewCol>=1, NewRow=<Size,
-    player_color(Player, PlayerPiece),
-    position(Board, NewCol-NewRow, NewPiece),
-    (player_color(Player,NewPiece), NewRealJumpSize is CurrJS + 1; \+player_color(Player,NewPiece), NewRealJumpSize is CurrJS),
-    NewAcc is Acc+1,
-    check_jump_size_aux(CI-RI, Board, Player, Direction, NewRealJumpSize, RealJumpSize, NewAcc))).
-*/
-% ---------------------------------------------------------------------------
 
 obstructed(Board, CI-RI-CF-RF):-
     position(Board, CI-RI, CurrPiece),
@@ -274,6 +199,7 @@ isJumped(C-R, List) :-
 
 
 % ------------------------ Check Winner ------------------------------
+
 game_over(GameState, Winner):-
     [Board, Player, AlreadyJumped] = GameState,
     (is_winner(Board, player1) -> Winner = player1 ; is_winner(Board, player2) -> Winner = player2 ; Winner = none).
@@ -328,8 +254,7 @@ remove_coordinates_outside_range([C-R | Rest], Filtered, Board) :-
 
 % ----------------------- Bot Functions ------------------------------
 
-choose_move(GameState, Player, Level, Move):- 
-    Level == 1, !,
+choose_move(GameState, Player, 1, Move):- 
     valid_moves(GameState, Player, ListOfMoves),
     random_item(ListOfMoves, Move).
 
@@ -344,7 +269,34 @@ count_adjacents([], _, _, Res, Res).
 count_adjacents([H|T], Board, Piece, Acc, Res):-
     C-R = H,
     adjacent_positions(C-R, AdjacentPositions),
-    remove_coordinates_outside_range(AdjacentPositions, Filtered),
+    remove_coordinates_outside_range(AdjacentPositions, Filtered, Board),
     check_all_adjacent(Filtered, Board, Piece, 0, Acc1),
     NewAcc is Acc + Acc1,
     count_adjacents(T, Board, Piece, NewAcc, Res).
+
+choose_move(GameState, Player, 2, CI-RI-CF-RF):-
+	valid_moves(GameState, Player, Moves),
+    player_change(Player, NewPlayer),
+	findall(Value-Move, (member(Move, Moves), 
+        move(GameState, Move, NewGameState), 
+        value(NewGameState,Player, Value1),
+        minimax(NewGameState, NewPlayer, min, 1, Value2),
+        Value is Value1 + Value2), Pairs),
+    sort(Pairs, SortedPairs),
+    [Min-_|_] = SortedPairs,
+    format('Min: ~d\n', [Min]),
+    findall(ValidMoves, member(Min-ValidMoves, SortedPairs), MinMoves),
+    random_member(CI-RI-CF-RF, MinMoves).
+
+minimax(_, _, _, 0, 0):- !.
+minimax(GameState, Player, MinMax, Depth, Value):-
+	player_change(Player, NewPlayer),
+	swap_minimax(MinMax, MaxMin),
+    LowerDepth is Depth - 1,
+	valid_moves(GameState, Player, ListOfMoves),
+	setof(Val, (member(Coordinate, ListOfMoves), 
+        move(GameState, Coordinate, NewGameState), 
+        value(NewGameState,Player,Value1),
+        minimax(NewGameState, NewPlayer, MaxMin, LowerDepth, Value2), 
+        Val is Value1 + Value2), Values),
+    minmax_op(MinMax, Values, Value).

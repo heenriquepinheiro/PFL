@@ -3,15 +3,18 @@
 :- use_module(library(system), [now/1]).
 :- consult(utils).
 
+
 :- dynamic player_color/2.
 :- dynamic difficulty_of/2.
 :- dynamic name_of/2.
+
 
 % game header
 apart:-
     write('=================\n'),
     write('      APART      \n'),
     write('=================\n').
+
 
 % initial menu
 initial_menu:- 
@@ -20,7 +23,8 @@ initial_menu:-
     write('2. Human vs. Machine\n'),
     write('3. Machine vs. Machine\n').
 
-% main menu options
+
+% Main menu options, each one representing a game mode.
 option(1):- 
     write('Human vs. Human\n'),
     set_name(player1),
@@ -38,7 +42,7 @@ option(3):-
     set_difficulty(player2).
 
 
-% get and set name of player
+% Get and set name of player.
 set_name(Player):-
     format('Hello ~a, what is your name? ', [Player]),
     get_line(Name, []),
@@ -53,22 +57,22 @@ get_line(Result, Acc):-
 get_line(Result, Acc):- atom_chars(Result, Acc).
 
 
-% choose and set difficulty
+% Choose and set difficulty.
 set_difficulty(Machine):- 
     format('Choose difficulty of ~a:\n', [Machine]),
-    write('1. Normal\n'),
-    write('2. Hard\n'),
+    write('1. Random\n'),
+    write('2. Greedy\n'),
     get_choice(1, 2, 'Difficulty', Difficulty),!,
     asserta((difficulty_of(Machine, Difficulty))).
 
-
+% Choose board size
 choose_board(Size):-
-    write('Board size: 8, 6? '),
+    write('Board size: 6, 8 or 10? '),
     repeat,
     read_number(Size),
-    member(Size, [6, 8]), !.
+    member(Size, [6, 8, 10]), !.
 
-
+% 
 choose_player(Player):-
     name_of(player1, Name1),
     name_of(player2, Name2),
@@ -99,6 +103,19 @@ settings([Board, Player, []]):-
     choose_board(Size),
     board(Size, Board).
 
+board(10,[
+        [empty,     black,      black,     black,     black,     black,     black,     black,     black,     empty],
+        [empty,     black,      black,     black,     black,     black,     black,     black,     black,     empty],
+        [empty,     black,      black,     black,     black,     black,     black,     black,     black,     empty],
+        [empty,     empty,      empty,     empty,     empty,     empty,     empty,     empty,     empty,     empty],
+        [empty,     empty,      empty,     empty,     empty,     empty,     empty,     empty,     empty,     empty],
+        [empty,     empty,      empty,     empty,     empty,     empty,     empty,     empty,     empty,     empty],
+        [empty,     empty,      empty,     empty,     empty,     empty,     empty,     empty,     empty,     empty],
+        [empty,     white,      white,     white,     white,     white,     white,     white,     white,     empty],
+        [empty,     white,      white,     white,     white,     white,     white,     white,     white,     empty],
+        [empty,     white,      white,     white,     white,     white,     white,     white,     white,     empty]
+        
+]).
 
 board(8,[
         [empty,     black,      black,     black,     black,     black,     black,     empty],
@@ -168,7 +185,7 @@ display_rows(_, Line, Size):-
     Line > Size, nl, !.
 
 display_rows(Board, Line, Size):-
-    format('~d |', [Line]),
+    (Line < 10 -> format('~d |', [Line]) ; format('~d|', [Line])),
     display_pieces(Board, Line, 1, Size),
     display_bar(Size),
     NextLine is Line + 1,

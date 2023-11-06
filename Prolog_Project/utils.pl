@@ -55,4 +55,8 @@ random_item(List, Item):-
     random(0, Len, Idx),
     nth0(Idx, List, Item).
 
+swap_minimax(min, max).
+swap_minimax(max, min).
 
+minmax_op(min, [Value|_], Result):- Result is -Value.
+minmax_op(max, Values, Value):- last(Values, Value).
