@@ -140,8 +140,8 @@ choose_move([Board, Player, AlreadyJumped], Move):-
     choose_move([Board,Player,AlreadyJumped], Player, Level, Move), !.
 
 valid_moves(GameState, Player, ListOfMoves):-
-    [Board,_,AlreadyJumped] = GameState,
-    findall(CI-RI-CF-RF, validate_move([Board, Player, AlreadyJumped],CI-RI-CF-RF),ListOfMoves), format("List of moves ~w\n", [ListOfMoves]), !.
+    [Board,Player,AlreadyJumped] = GameState,
+    findall(CI-RI-CF-RF, validate_move([Board, Player, AlreadyJumped],CI-RI-CF-RF),ListOfMoves), !.
 
 valid_moves_piece(GameState, CI-RI, ListOfMoves):-
     findall(CI-RI-CF-RF, validate_move(GameState,CI-RI-CF-RF),ListOfMoves),
