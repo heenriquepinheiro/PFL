@@ -140,7 +140,7 @@ choose_move([Board, Player, AlreadyJumped], Move):-
     choose_move([Board,Player,AlreadyJumped], Player, Level, Move), !.
 
 valid_moves(GameState, Player, ListOfMoves):-
-    [Board,Player,AlreadyJumped] = GameState,
+    [Board,_,AlreadyJumped] = GameState,
     findall(CI-RI-CF-RF, validate_move([Board, Player, AlreadyJumped],CI-RI-CF-RF),ListOfMoves), !.
 
 valid_moves_piece(GameState, CI-RI, ListOfMoves):-
@@ -374,15 +374,16 @@ choose_move(GameState, Player, 2, CI-RI-CF-RF):-
 
 % minimax(+GameState, +Player, +Type, +Depth, -Value)
 % Minimax algorithm
-minimax(_, _, _, 0, 0):- !.
+minimax(_, _, _, 2, 0):- !.
 minimax(GameState, Player, MinMax, Depth, Value):-
 	player_change(Player, NewPlayer),
 	swap_minimax(MinMax, MaxMin),
-    LowerDepth is Depth - 1,
-	valid_moves(GameState, Player, ListOfMoves),
+    NextDepth is Depth + 1,
+    [Board,_,_] = GameState,
+	valid_moves([Board,_,[]], Player, ListOfMoves),
 	setof(Val, (member(Coordinate, ListOfMoves), 
         move(GameState, Coordinate, NewGameState), 
         value(NewGameState,Player,Value1),
-        minimax(NewGameState, NewPlayer, MaxMin, LowerDepth, Value2), 
+        minimax(NewGameState, NewPlayer, MaxMin, NextDepth, Value2), 
         Val is Value1 + Value2), Values),
     minmax_op(MinMax, Values, Value).
