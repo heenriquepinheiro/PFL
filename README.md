@@ -73,8 +73,6 @@ There are two types of level implemented in computer plays, random and greedy re
 **Level 2:** the bot proceeds with a greedy approach, choosing the next move, trying to minimise your score and maximise your opponent's. The score refers to the sum of the adjacencies of the same player's pieces.
 
 ## Conclusion
-
-Our implementation has two different line considerations:
 During the course of the project, the only question that emerged was in relation to the pieces that had to be taken into account when calculating the line size for the jump, leading us to two interpretations:
 - taking into account only adjacent pieces
 - taking into account all the pieces on the line from one end of the board to the other
