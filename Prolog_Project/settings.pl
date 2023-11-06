@@ -42,6 +42,7 @@ option(3):-
     set_difficulty(player2).
 
 
+% set_name(-Player)
 % Get and set name of player.
 set_name(Player):-
     format('Hello ~a, what is your name? ', [Player]),
@@ -49,14 +50,7 @@ set_name(Player):-
     asserta((name_of(Player, Name))).
 
 
-get_line(Result, Acc):-
-    get_char(Char),
-    Char \= '\n',
-    append(Acc, [Char], NewAcc),
-    get_line(Result, NewAcc).
-get_line(Result, Acc):- atom_chars(Result, Acc).
-
-
+% choose_difficulty(+Machine)
 % Choose and set difficulty.
 set_difficulty(Machine):- 
     format('Choose difficulty of ~a:\n', [Machine]),
@@ -65,14 +59,18 @@ set_difficulty(Machine):-
     get_choice(1, 2, 'Difficulty', Difficulty),!,
     asserta((difficulty_of(Machine, Difficulty))).
 
-% Choose board size
+
+% choose_board(-Size)
+% Choose board size.
 choose_board(Size):-
     write('Board size: 6, 8 or 10? '),
     repeat,
     read_number(Size),
     member(Size, [6, 8, 10]), !.
 
-% 
+
+% choose_player(-Player)
+% Name the player.
 choose_player(Player):-
     name_of(player1, Name1),
     name_of(player2, Name2),
@@ -81,11 +79,12 @@ choose_player(Player):-
     nth1(Index, [player1, player2], Player),
     assert_colors(Index).
 
-assert_colors(Index):-
-    Index =:= 1, asserta(player_color(player1,white)), asserta(player_color(player2,black)).
 
-assert_colors(Index):-
-    Index =:= 2, asserta(player_color(player2,white)), asserta(player_color(player1,black)).
+% Assign colour to the player.
+assert_colors(1):-
+    asserta(player_color(player1,white)), asserta(player_color(player2,black)).
+assert_colors(2):-
+    asserta(player_color(player2,white)), asserta(player_color(player1,black)).
 
 
 % Game mode choice
@@ -95,6 +94,7 @@ set_mode :-
     option(Option).
 
 
+% settings(-GameState)
 % initialize GameState with board
 settings([Board, Player, []]):-
     apart,
@@ -103,6 +103,8 @@ settings([Board, Player, []]):-
     choose_board(Size),
     board(Size, Board).
 
+
+% board(+Size, +Matrix)
 board(10,[
         [empty,     black,      black,     black,     black,     black,     black,     black,     black,     empty],
         [empty,     black,      black,     black,     black,     black,     black,     black,     black,     empty],
@@ -130,28 +132,38 @@ board(8,[
 ]).
 
 board(6,[
-        [empty,     empty,      empty,     black,     empty,     black],
+        [empty,     black,      black,     black,     black,     empty],
+        [empty,     black,      black,     black,     black,     empty],
         [empty,     empty,      empty,     empty,     empty,     empty],
-        [empty,     black,      black,     empty,     empty,     empty],
-        [empty,     empty,      white,     empty,     empty,     empty],
         [empty,     empty,      empty,     empty,     empty,     empty],
-        [empty,     white,      empty,     white,     white,     empty]
+        [empty,     white,      white,     white,     white,     empty],
+        [empty,     white,      white,     white,     white,     empty]
 ]).
 
+
+% symbol(+Piece, -Symbol)
+% Associate the piece to the respetible symbol.
 symbol(empty, ' '):-!.
 symbol(black, 'B'):-!.
 symbol(white, 'W'):-!.
 
+
+% position(+Board, +Coordinate, -Piece)
+% Link Piece with the piece on the board at the coordinates provided.
 position(Board, Col-Row, Piece):-
     nth1(Row, Board, Line),
     nth1(Col, Line, Piece).
 
-    
+
+% get_symbol(+Board, +Line, +Col, -Symbol)
+% get the symbol present in a coordinate
 get_symbol(Board, Row, Col, Symbol):-
     position(Board, Col-Row, Piece),
     symbol(Piece, Symbol).
 
 
+% display_header(+Size)
+% Displays the pattern number with fixed length
 display_header(Final, Final):-
     format('~d\n  ', [Final]), !.
 display_header(1, Final):-
@@ -164,6 +176,8 @@ display_header(Num, Final):-
     display_header(Next, Final).
 
 
+% display_bar(+Size)
+% Displays  '|---|'
 display_bar(0):-
     write('|\n'), !.
 display_bar(Size):-
@@ -172,6 +186,7 @@ display_bar(Size):-
     display_bar(Next).
 
 
+% display_pieces(+Board, +Line, +Col, +Size)
 display_pieces(_, _, Col, Size):- 
     Col > Size, write('\n  '), !.
 display_pieces(Board, Line, Col, Size):-
@@ -181,9 +196,9 @@ display_pieces(Board, Line, Col, Size):-
     display_pieces(Board, Line, NextCol, Size).
 
 
+% display_rows(+Board, +Line, +Size)
 display_rows(_, Line, Size):- 
     Line > Size, nl, !.
-
 display_rows(Board, Line, Size):-
     (Line < 10 -> format('~d |', [Line]) ; format('~d|', [Line])),
     display_pieces(Board, Line, 1, Size),
@@ -191,7 +206,8 @@ display_rows(Board, Line, Size):-
     NextLine is Line + 1,
     display_rows(Board, NextLine, Size).
 
-clear_console:- write('\33\[2J').
+
+
 
 
 

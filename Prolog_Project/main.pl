@@ -4,6 +4,16 @@
 :- consult(utils).
 
 
+
+% ------------------------ Game basics ------------------------------
+
+% play/0
+% Starts the game
+play:- settings(GameState), !, game_cycle(GameState), clear_data.
+
+
+% game_cycle(+GameState)
+% Main Loop 
 game_cycle(GameState):-
     game_over(GameState, Winner), 
     Winner \= none, !,
@@ -17,6 +27,36 @@ game_cycle(GameState):-
     jump_mode(NewGameState, JumpState), !,
     change_players(JumpState, FinalGameState),
     game_cycle(FinalGameState).
+
+
+% display_game(+GameState)
+% Prints the board
+display_game([Board,_,_]) :-
+    % clear_console,
+    length(Board, Size),
+    display_header(1, Size),
+    display_bar(Size),
+    display_rows(Board, 1, Size).
+    
+
+% choose_move(+GameState,-Move)
+% Choose move a human player
+choose_move([Board, Player, AlreadyJumped], CI-RI-CF-RF):-
+    \+difficulty_of(Player, _),
+    get_move(Board, ColI-RowI, ColF-RowF),
+    ((validate_move([Board, Player, AlreadyJumped], ColI-RowI-ColF-RowF), CI is ColI, RI is RowI, CF is ColF, RF is RowF);
+    (\+validate_move([Board, Player, AlreadyJumped], ColI-RowI-ColF-RowF),
+    write('The selected move is not valid, please try again!\n'),
+    choose_move([Board, Player, AlreadyJumped], CI-RI-CF-RF))).
+    
+choose_move([Board, Player, AlreadyJumped], Move):-
+    difficulty_of(Player, Level),                  
+    choose_move([Board,Player,AlreadyJumped], Player, Level, Move), !.
+
+    
+
+% ------------------------ Move Logic and Validation ------------------------------
+
 
 jump_mode([Board, Player, AlreadyJumped], JumpState):-
     empty_list(AlreadyJumped, true),
@@ -38,7 +78,7 @@ jump_mode([Board, Player, AlreadyJumped], JumpState):-
     )).
 
 jump_mode([Board, Player, AlreadyJumped], JumpState):-
-    difficulty_of(Player, Level),
+    difficulty_of(Player, 1),
     empty_list(AlreadyJumped, false), [LastMove|T] = AlreadyJumped,
     jump_possible([Board, Player, AlreadyJumped], LastMove),
     Choices = [121, 110],
@@ -47,6 +87,29 @@ jump_mode([Board, Player, AlreadyJumped], JumpState):-
     (Choice == 121,
     game_cycle([Board, Player, AlreadyJumped])
     )).
+
+jump_mode([Board, Player, AlreadyJumped], JumpState):-
+    difficulty_of(Player, 2),
+    empty_list(AlreadyJumped, false), [LastMove|T] = AlreadyJumped,
+    jump_possible([Board, Player, AlreadyJumped], LastMove),
+    greedy_choice([Board, Player, AlreadyJumped], LastMove, Choice),
+    ((Choice == 110, JumpState = [Board, Player, AlreadyJumped]);
+    (Choice == 121,
+    game_cycle([Board, Player, AlreadyJumped])
+    )).
+
+greedy_choice(GameState, LastMove, Choice):-
+    [Board, Player, AlreadyJumped] = GameState,
+    valid_moves_piece(GameState, LastMove, Moves),
+    value(GameState, Player, ValueNow),
+    findall(Value-Move, (member(Move, Moves), 
+        move(GameState, Move, NewGameState), 
+        value(NewGameState,Player, ValueNext),
+        Value is ValueNext - ValueNow), Pairs),
+    sort(Pairs, SortedPairs),
+    [Diff-_|_] = SortedPairs,
+    (Diff < 0 -> Choice is 121; Choice is 110).
+    
 
 % y - 121, n - 110
 ask_to_jump(Choice):-
@@ -64,17 +127,6 @@ user_turn([_, Player, _]):-
     format('Player ~a, is your turn!\n', [Name]), !.
 
 
-display_game([Board,_,_]) :-
-    % clear_console,
-    length(Board, Size),
-    display_header(1, Size),
-    display_bar(Size),
-    display_rows(Board, 1, Size).
-
-
-play:- settings(GameState), !, game_cycle(GameState).
-
-
 choose_move([Board, Player, AlreadyJumped], CI-RI-CF-RF):-
     \+difficulty_of(Player, _),
     get_move(Board, ColI-RowI, ColF-RowF),
@@ -88,22 +140,18 @@ choose_move([Board, Player, AlreadyJumped], Move):-
     choose_move([Board,Player,AlreadyJumped], Player, Level, Move), !.
 
 valid_moves(GameState, Player, ListOfMoves):-
-    [Board,Player,_] = GameState,
-    findall(CI-RI-CF-RF, validate_move_normal([Board,Player,[]],CI-RI-CF-RF),ListOfMoves).
-
-valid_moves(GameState, _, ListOfMoves):-
-    findall(CI-RI-CF-RF, validate_move_normal(GameState,CI-RI-CF-RF),ListOfMoves),
-    \+length(ListOfMoves, 0), !.
+    [Board,_,AlreadyJumped] = GameState,
+    findall(CI-RI-CF-RF, validate_move([Board, Player, AlreadyJumped],CI-RI-CF-RF),ListOfMoves), format("List of moves ~w\n", [ListOfMoves]), !.
 
 valid_moves_piece(GameState, CI-RI, ListOfMoves):-
-    findall(CI-RI-CF-RF, validate_move_normal(GameState,CI-RI-CF-RF),ListOfMoves),
+    findall(CI-RI-CF-RF, validate_move(GameState,CI-RI-CF-RF),ListOfMoves),
     \+length(ListOfMoves, 0), !.
 
 
 
 % Direction: 1 - Horizontal; 2 - Vertical; 3 - Diagonal (\); 4 - Diagonal (//).
 
-validate_move_normal([Board, Player, AlreadyJumped], CI-RI-CF-RF):-
+validate_move([Board, Player, AlreadyJumped], CI-RI-CF-RF):-
     length(Board, Size),
     position(Board, CI-RI, Piece),
     player_color(Player, Piece), 
@@ -169,16 +217,22 @@ already_jumped(CF-RF, AlreadyJumped):-
     already_jumped(CF-RF, T).
 
 
+% obstructed(+Board, +Coordinates)
+% Checks if there is already a player piece in the position you want to move to.
 obstructed(Board, CI-RI-CF-RF):-
     position(Board, CI-RI, CurrPiece),
     position(Board, CF-RF, NextPlace),
     (NextPlace \= CurrPiece).
 
-    
+
+% change_players(+GameState, -NewGameState)
+% Change the player in the new state
 change_players([Board, Player, _], [Board, NewPlayer, []]) :-
     player_change(Player, NewPlayer).
 
 
+% move(+GameState, +Move, -NewGameState)
+% Moves a piece
 move(GameState, Move, NewGameState):-
     [Board, Player, AlreadyJumped] = GameState,
     CI-RI-CF-RF = Move,
@@ -200,27 +254,44 @@ isJumped(C-R, List) :-
 
 % ------------------------ Check Winner ------------------------------
 
+% game_over(+GameState, +Winner)
+% Checks if the game is over
 game_over(GameState, Winner):-
     [Board, Player, AlreadyJumped] = GameState,
     (is_winner(Board, player1) -> Winner = player1 ; is_winner(Board, player2) -> Winner = player2 ; Winner = none).
 
+
+% show_winner(+Winner)
+% Print the winner.
 show_winner(Winner):-
     name_of(Winner, Name),
     write('\n------------------------\n'),
     format('Winner is ~a!\n', [Name]),
     write('------------------------\n').
 
+
+% is_winner(+Board, +Player)
+% Check if Player wins.
 is_winner(Board, Player):-
     player_color(Player, Piece),
     check(Board, Piece).
 
+
+% check(+Board, +Piece)
+% check winning condition for a given type of pieces (Piece).
 check(Board, Piece):-
     find_player_pieces(Board, Piece, Pieces),
     see_all(Pieces, Board, Piece).
 
+
+% find_player_pieces(+Board, +Piece, -Pieces)
+% List all pieces of a player that are stil on the board.
 find_player_pieces(Board, Piece, Pieces):-
     findall(Col-Row, position(Board, Col-Row, Piece), Pieces).
 
+
+% see_all(+Pieces, +Board, +Pi)
+% Check for all pieces of a type (Piece) if all of them have adjacents.
 see_all([], _, _).
 see_all([H|Res], Board, Piece):-
     C-R = H,
@@ -229,7 +300,10 @@ see_all([H|Res], Board, Piece):-
     check_all_adjacent(Filtered, Board, Piece, 0, Acc),
     Acc < 1,
     see_all(Res, Board, Piece).
-    
+
+
+% adjacent_positions(+Coordinate, -AdjacentPositions)
+% List all possible adjacent positions of a given coordinate.
 adjacent_positions(C-R, AdjacentPositions) :-
     C1 is C - 1, R1 is R - 1,
     C2 is C, R2 is R - 1,
@@ -241,11 +315,17 @@ adjacent_positions(C-R, AdjacentPositions) :-
     C8 is C + 1, R8 is R + 1,
     AdjacentPositions = [C1-R1, C2-R2, C3-R3, C4-R4, C5-R5, C6-R6, C7-R7, C8-R8].
 
+
+% check_all_adjacent(+Pieces, +Board, +Piece, +Acc, -TotalCount)
+% Checks for adjacencies and return the number of pieces that have them.
 check_all_adjacent([], _, _, Acc, Acc).
 check_all_adjacent([C-R | Rest], Board, Piece, Acc, TotalCount) :-
     (position(Board, C-R, AdjacentPiece), Piece \= AdjacentPiece -> NewAcc is Acc ; NewAcc is Acc + 1),
     check_all_adjacent(Rest, Board, Piece, NewAcc, TotalCount).
 
+
+% remove_coordinates_outside_range(+Positions, -Filtered, +Board)
+% Remove impossible/out of board positions.
 remove_coordinates_outside_range([], [], Board).
 remove_coordinates_outside_range([C-R | Rest], Filtered, Board) :-
     (in_bounds(Board, C-R)) ->
@@ -254,17 +334,16 @@ remove_coordinates_outside_range([C-R | Rest], Filtered, Board) :-
 
 % ----------------------- Bot Functions ------------------------------
 
-choose_move(GameState, Player, 1, Move):- 
-    valid_moves(GameState, Player, ListOfMoves),
-    random_item(ListOfMoves, Move).
-
-
+% value(+GameState, +Player, -Value)
+% Gets the value  for minimax algorithm
 value([Board,_,_], Player, Value):-
     player_color(Player, Piece),
     find_player_pieces(Board, Piece, Pieces),
     count_adjacents(Pieces, Board, Piece, 0, Value).
 
 
+% count_adjacents(+Pieces, +Board, +Piece, +Acc, -Value)
+% Sum all the adjacencies of a part type to calculate the value of the minmax algorithm.
 count_adjacents([], _, _, Res, Res).
 count_adjacents([H|T], Board, Piece, Acc, Res):-
     C-R = H,
@@ -273,6 +352,11 @@ count_adjacents([H|T], Board, Piece, Acc, Res):-
     check_all_adjacent(Filtered, Board, Piece, 0, Acc1),
     NewAcc is Acc + Acc1,
     count_adjacents(T, Board, Piece, NewAcc, Res).
+
+
+choose_move(GameState, Player, 1, Move):- 
+    valid_moves(GameState, Player, ListOfMoves),
+    random_item(ListOfMoves, Move).
 
 choose_move(GameState, Player, 2, CI-RI-CF-RF):-
 	valid_moves(GameState, Player, Moves),
@@ -284,10 +368,12 @@ choose_move(GameState, Player, 2, CI-RI-CF-RF):-
         Value is Value1 + Value2), Pairs),
     sort(Pairs, SortedPairs),
     [Min-_|_] = SortedPairs,
-    format('Min: ~d\n', [Min]),
     findall(ValidMoves, member(Min-ValidMoves, SortedPairs), MinMoves),
     random_member(CI-RI-CF-RF, MinMoves).
 
+
+% minimax(+GameState, +Player, +Type, +Depth, -Value)
+% Minimax algorithm
 minimax(_, _, _, 0, 0):- !.
 minimax(GameState, Player, MinMax, Depth, Value):-
 	player_change(Player, NewPlayer),
