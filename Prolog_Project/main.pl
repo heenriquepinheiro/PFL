@@ -53,11 +53,20 @@ choose_move([Board, Player, AlreadyJumped], Move):-
     difficulty_of(Player, Level),                  
     choose_move([Board,Player,AlreadyJumped], Player, Level, Move), !.
 
+
+% user_turn(+GameState)
+% Prints the player name
+user_turn([_, Player, _]):-
+    name_of(Player, Name),
+    format('Player ~a, is your turn!\n', [Name]), !.
+
     
 
 % ------------------------ Move Logic and Validation ------------------------------
 
-
+% jump_mode(+GameState, -JumpState)
+% Checks if the player can jump again. If it is able to jump, the player can choose if it wants to do so or not.
+% For random bot, it randomly chooses if it wants to jump or not. For greedy bot, it chooses the best option.
 jump_mode([Board, Player, AlreadyJumped], JumpState):-
     empty_list(AlreadyJumped, true),
     JumpState = [Board, Player, AlreadyJumped].
@@ -98,6 +107,8 @@ jump_mode([Board, Player, AlreadyJumped], JumpState):-
     game_cycle([Board, Player, AlreadyJumped])
     )).
 
+% greedy_choice(+GameState, +LastMove, -Choice)
+% Chooses the best option for the greedy bot.
 greedy_choice(GameState, LastMove, Choice):-
     [_, Player, _] = GameState,
     valid_moves_piece(GameState, LastMove, Moves),
@@ -111,63 +122,56 @@ greedy_choice(GameState, LastMove, Choice):-
     (Diff < 0 -> Choice is 121; Choice is 110).
     
 
-% y - 121, n - 110
+% ask_to_jump(-Choice)
+% Asks the player if it wants to jump again. y - 121, n - 110.
 ask_to_jump(Choice):-
     write('Do you want to continue jumping (y/n): '),
     repeat,
     get_code(Choice),
     member(Choice, [121, 110]), !.
 
-    
+% jump_possible(+GameState, +LastMove)
+% Checks if the player can jump again.
 jump_possible([Board, Player, AlreadyJumped], CI-RI):-
     valid_moves_piece([Board, Player, AlreadyJumped], CI-RI, _).
 
-user_turn([_, Player, _]):-
-    name_of(Player, Name),
-    format('Player ~a, is your turn!\n', [Name]), !.
-
-
-choose_move([Board, Player, AlreadyJumped], CI-RI-CF-RF):-
-    \+difficulty_of(Player, _),
-    get_move(Board, ColI-RowI, ColF-RowF),
-    ((validate_move_normal([Board, Player, AlreadyJumped], ColI-RowI-ColF-RowF), CI is ColI, RI is RowI, CF is ColF, RF is RowF);
-    (\+validate_move_normal([Board, Player, AlreadyJumped], ColI-RowI-ColF-RowF),
-    write('The selected move is not valid, please try again!\n'),
-    choose_move([Board, Player, AlreadyJumped], CI-RI-CF-RF))).
-
-choose_move([Board, Player, AlreadyJumped], Move):-
-    difficulty_of(Player, Level),                  
-    choose_move([Board,Player,AlreadyJumped], Player, Level, Move), !.
-
+% valid_moves(+GameState, +Player, -ListOfMoves)
+% List all possible moves for a player.
 valid_moves(GameState, Player, ListOfMoves):-
     [Board,_,AlreadyJumped] = GameState,
     findall(CI-RI-CF-RF, validate_move([Board, Player, AlreadyJumped],CI-RI-CF-RF),ListOfMoves), !.
 
+% valid_moves_piece(+GameState, +CI-RI, -ListOfMoves)
+% List all possible moves for a piece.
 valid_moves_piece(GameState, CI-RI, ListOfMoves):-
     findall(CI-RI-CF-RF, validate_move(GameState,CI-RI-CF-RF),ListOfMoves),
     \+length(ListOfMoves, 0), !.
 
 
 
-% Direction: 1 - Horizontal; 2 - Vertical; 3 - Diagonal (\); 4 - Diagonal (//).
-
+% validate_move(+GameState, +CI-RI-CF-RF)
+% Checks if a move is valid.
 validate_move([Board, Player, AlreadyJumped], CI-RI-CF-RF):-
     position(Board, CI-RI, Piece),
     player_color(Player, Piece), 
     in_bounds(Board,CF-RF),
     obstructed(Board, CI-RI-CF-RF),
     get_direction(CI-RI-CF-RF, Direction, JumpSize),
-    check_jump_size_normal(CI-RI, Board, Player, Direction, RealJumpSize), 
+    check_jump_size(CI-RI, Board, Player, Direction, RealJumpSize), 
     JumpSize =:= RealJumpSize,
     (empty_list(AlreadyJumped,true); (empty_list(AlreadyJumped,false), RealJumpSize > 1, selected_previous_piece(AlreadyJumped, CI-RI))),
     \+already_jumped(CF-RF, AlreadyJumped).
 
+% selected_previous_piece(+AlreadyJumped, +CI-RI)
+% Checks if the player selected the piece that jumped before.
 selected_previous_piece(AlreadyJumped, CI-RI):-
     [LastMove|_] = AlreadyJumped,
     CLast-RLast = LastMove,
     CI == CLast, RI == RLast.
 
-check_jump_size_normal(CI-RI, Board, Player, 1, RealJumpSize):-
+% check_jump_size(+CI-RI, +Board, +Player, +Direction, -RealJumpSize)
+% Checks if the jump size is valid.
+check_jump_size(CI-RI, Board, Player, 1, RealJumpSize):-
     ColBack is CI - 1, ColFront is CI + 1,
     player_color(Player, PlayerColor),
     ((position(Board, ColBack-RI, PlayerColor), position(Board, ColFront-RI, PlayerColor), RealJumpSize is 3);
@@ -175,7 +179,7 @@ check_jump_size_normal(CI-RI, Board, Player, 1, RealJumpSize):-
     (position(Board, ColBack-RI, PlayerColor), \+position(Board, ColFront-RI, PlayerColor), RealJumpSize is 2);
     (\+position(Board, ColBack-RI, PlayerColor), \+position(Board, ColFront-RI, PlayerColor), RealJumpSize is 1)).
 
-check_jump_size_normal(CI-RI, Board, Player, 2, RealJumpSize):-
+check_jump_size(CI-RI, Board, Player, 2, RealJumpSize):-
     RowBack is RI - 1, RowFront is RI + 1,
     player_color(Player, PlayerColor),
     ((position(Board, CI-RowBack, PlayerColor), position(Board, CI-RowFront, PlayerColor), RealJumpSize is 3);
@@ -183,7 +187,7 @@ check_jump_size_normal(CI-RI, Board, Player, 2, RealJumpSize):-
     (position(Board, CI-RowBack, PlayerColor), \+position(Board, CI-RowFront, PlayerColor), RealJumpSize is 2);
     (\+position(Board, CI-RowBack, PlayerColor), \+position(Board, CI-RowFront, PlayerColor), RealJumpSize is 1)).
 
-check_jump_size_normal(CI-RI, Board, Player, 3, RealJumpSize):-
+check_jump_size(CI-RI, Board, Player, 3, RealJumpSize):-
     ColBack is CI - 1, ColFront is CI + 1,
     RowBack is RI - 1, RowFront is RI + 1,
     player_color(Player, PlayerColor),
@@ -192,7 +196,7 @@ check_jump_size_normal(CI-RI, Board, Player, 3, RealJumpSize):-
     (position(Board, ColBack-RowBack, PlayerColor), \+position(Board, ColFront-RowFront, PlayerColor), RealJumpSize is 2);
     (\+position(Board, ColBack-RowBack, PlayerColor), \+position(Board, ColFront-RowFront, PlayerColor), RealJumpSize is 1)).
 
-check_jump_size_normal(CI-RI, Board, Player, 4, RealJumpSize):-
+check_jump_size(CI-RI, Board, Player, 4, RealJumpSize):-
     ColBack is CI - 1, ColFront is CI + 1,
     RowBack is RI - 1, RowFront is RI + 1,
     player_color(Player, PlayerColor),
@@ -201,6 +205,9 @@ check_jump_size_normal(CI-RI, Board, Player, 4, RealJumpSize):-
     (position(Board, ColBack-RowFront, PlayerColor), \+position(Board, ColFront-RowBack, PlayerColor), RealJumpSize is 2);
     (\+position(Board, ColBack-RowFront, PlayerColor), \+position(Board, ColFront-RowBack, PlayerColor), RealJumpSize is 1)).
 
+% get_direction(+CI-RI-CF-RF, -Direction, -JumpSize)
+% Gets the direction of the move and the jump size asked by the player.
+% Direction: 1 - Horizontal; 2 - Vertical; 3 - Diagonal (\); 4 - Diagonal (//).
 get_direction(CI-RI-CF-RF, Direction, JumpSize):-
     (RI == RF, Direction is 1, Diff is CF - CI, abs(Diff, A), JumpSize is A);
     (CI == CF, Direction is 2, Diff is RF - RI, abs(Diff, B), JumpSize is B);
@@ -236,7 +243,8 @@ move(GameState, Move, NewGameState):-
     (empty_list(AlreadyJumped, false), append([CF-RF],AlreadyJumped, NewAlreadyJumped)))); (Res1 < 2, Res2 < 2)),
     NewGameState = [NewBoard, Player, NewAlreadyJumped].
 
-
+% already_jumped(+Coordinates, +List)
+% Checks if the player already jumped to a given position.
 already_jumped(C-R, List) :-
     member(C-R, List).
 
@@ -344,11 +352,14 @@ count_adjacents([H|T], Board, Piece, Acc, Res):-
     NewAcc is Acc + Acc1,
     count_adjacents(T, Board, Piece, NewAcc, Res).
 
-
+% choose_move(+GameState, +Player, +Level, -Move)
+% Choose move for random bot
 choose_move(GameState, Player, 1, Move):- 
     valid_moves(GameState, Player, ListOfMoves),
     random_item(ListOfMoves, Move).
 
+% choose_move(+GameState, +Player, +Level, -Move)
+% Choose move for greedy bot
 choose_move(GameState, Player, 2, CI-RI-CF-RF):-
 	valid_moves(GameState, Player, Moves),
     player_change(Player, NewPlayer),
