@@ -2,8 +2,8 @@
 ## Game and Group
 The game developed was Apart, by group Apart_6.
 Group:
-- Francisco Silva Cunha Campos
-- José Henrique Nogueira Campos de Morais Pinheiro
+- Francisco Silva Cunha Campos (up202108735)
+- José Henrique Nogueira Campos de Morais Pinheiro (up20218879)
 
 ## Installation and Execution
 To install this version of Apart, you first need to download and unzip the files in PFL_TP1_T08_Apart_6.ZIP.
@@ -14,8 +14,9 @@ Apart is a board game for tow players originally played on a 8x8 board with whit
 There are two types of pieces, white and black, and the player who gets white is the first to play.
 The pieces are grouped as follows:
 
-<img src="/Apart_initial_board.png" alt="Alt Text" width="50%" height="50%">
+<img src="https://cdn.shopify.com/s/files/1/0578/3502/8664/files/Apart1_300x300.png?v=1682247247" >
 
+<br>
 The aim is to move the pieces so that none of their pieces are vertically, horizontally, or diagonally adjacent to each other.
 
 The players play alternately in sequences of moves, which can be of two types:
@@ -45,8 +46,9 @@ Before they start playing, one of the players will have to make the necessary se
 - Level of difficulty of bot: greaedy or random
 - Which of the two players plays with the white pieces
 - Board's size
+<br><br>
 
-### Move Validation adn Execution
+### Move Validation and Execution
 After the settings, the game enters a place in the **_game_cyle/1_** predicate. Here, **_choose_move/2_** is called, where **_get_move/3_** will ask for the coordinates of the piece the player wants to play as well as the coordinates of where they want to move it to. Each choice is passed to **_validate_move_normal/2_** where the following conditions are checked:
 - coordinates within the board
 - existence of a piece of the same type in the final position
@@ -78,6 +80,7 @@ During the course of the project, the only question that emerged was in relation
 - taking into account all the pieces on the line from one end of the board to the other
 
 The two dynamics were developed and experimented with and, in the end, it was decided to leave only the first way of playing.
+
+In addition to this, another question arose in the finalisation phase, relating to the nomenclature of the requested predicates. Initially, the development of the game was not based on them, in view of their change. However, later on, it became a little difficult to completely fulfil the requested names. However, changes were made so that we could fulfil the request as much as possible.
+
 Aside from this, it can be considered that the implementation of the Apart game with its basic rules, as well as the three modes requested for this project, was a success.
-
-
