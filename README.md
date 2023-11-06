@@ -1,5 +1,5 @@
-# PFL
-## Game adn Group
+# PFL Project 1
+## Game and Group
 The game developed was Apart, by group Apart_6.
 Group:
 - Francisco Silva Cunha Campos
