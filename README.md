@@ -65,14 +65,14 @@ By calling **_game_over/2_**, this condition is checked using the predicate **_i
 
 ### Game State Evaluation
 The game can be evaluated using the **_value/3_** predicate, used when we are at the greedy level.
-This returns a value that reflects the sum of the number of adjacencies each piece has with its equals. To do this, it uses **_find_player_pices/3_**, which returns a list with the coordinates of all the pieces on the player's board, and **_count_adjacents_**, which performs the calculations.
+This returns a value that reflects the sum of the number of adjacencies each piece has with its equals. To do this, it uses **_find_player_pices/3_**, which returns a list with the coordinates of all the pieces on the player's board, and **_count_adjacents_**, which performs the calculations. In Apart, the winner is the one who scores first 0 points.
 
 ### Computer Plays
 There are two types of level implemented in computer plays, random and greedy respectively.
 <br>
 **Level 1:** the bot randomly chooses the combination (Start_column-Start_row , End_column-End_row). If this move represents a jump, it will also randomly decide whether to continue the move.
 <br>
-**Level 2:** the bot proceeds with a greedy approach, choosing the next move, trying to minimise your score and maximise your opponent's. The score refers to the sum of the adjacencies of the same player's pieces.
+**Level 2:** the bot proceeds with a greedy approach (minimax), choosing the next move, trying to minimise your score and maximise your opponent's. The score refers to the sum of the adjacencies of the same player's pieces.
 
 ## Conclusion
 During the course of the project, the only question that emerged was in relation to the pieces that had to be taken into account when calculating the line size for the jump, leading us to two interpretations:
