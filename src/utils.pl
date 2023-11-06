@@ -101,5 +101,5 @@ clear_console:- write('\33\[2J').
 
 clear_data :-
    retractall(player_color(_,_)),
-    retractall(difficulty(_, _)),
+    retractall(difficulty_of(_, _)),
     retractall(name_of(_, _)).
