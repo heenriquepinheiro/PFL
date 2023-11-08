@@ -9,7 +9,7 @@
 
 % play/0
 % Starts the game
-play:- settings(GameState), !, game_cycle(GameState), clear_data.
+play:- settings(GameState), !, game_cycle(GameState), !, clear_data.
 
 
 % game_cycle(+GameState)
